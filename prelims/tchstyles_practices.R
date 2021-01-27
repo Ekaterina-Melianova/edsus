@@ -23,15 +23,15 @@ Sys.setlocale("LC_CTYPE", "russian")
 
 setwd(paste0("C:/Users/", Sys.getenv("USERNAME"), '/YandexDisk/SUS_TIMSS/Data/SUS'))
 tch_sus <- read.csv('export_teachers_flat.csv', sep = '\t') %>% 
-  select(IDSCHOOL, IDTEACH, StratNameENG, n26_1, n26_3, n5_0, n5_1, n5_2, n5_3, n3_1)
+  select(IDSCHOOL, IDTEACH, StratNameENG, n24_1, n24_3, CourseName, n3_1)
 
 # Defining a subject: Math (1), Science (2) or Other (3)
-tch_sus$subject_cat <- paste0(tch_sus$n5_0, tch_sus$n5_1, tch_sus$n5_2, tch_sus$n5_3)
-tch_sus$subject_cat <- sapply(tch_sus$subject_cat, tolower)
-tch_sus$subject_math <- ifelse(str_detect(tch_sus$subject_cat, 'матем|алг|геом'), 1, 0)
-tch_sus$subject_science <- ifelse(str_detect(tch_sus$subject_cat, 'фи(з|х)ик|хим|гео|раф|биол|билогия'), 1, 0)
+tch_sus$subject_math <- ifelse(tch_sus$CourseName == '1 - "Математика"', 1, 0)
+tch_sus$subject_science <- ifelse(tch_sus$CourseName == '2 - "Физика"', 1, 0)
+table(tch_sus$subject_math)
+table(tch_sus$subject_science)
 
-# Fixing tecching experience
+# Fixing teaching experience
 tch_sus$n3_1 <- as.character(tch_sus$n3_1)
 tch_sus$n3_1 <- sub("[а-яА-Я]+", x = tch_sus$n3_1, replacement = '')
 tch_sus$n3_1 <- sub(",", x = tch_sus$n3_1, replacement = '.')
@@ -40,30 +40,33 @@ tch_sus$n3_1 <- as.numeric(tch_sus$n3_1)
 
 # Subsetting by subjects
 tch_sus_math <- tch_sus %>% filter(subject_math == 1) %>% 
-  select(IDSCHOOL, IDTEACH, StratNameENG, n26_1, n26_3, n3_1)
+  select(IDSCHOOL, IDTEACH, StratNameENG, n24_1, n24_3, n3_1)
 names(tch_sus_math) <- c('IDSCHOOL_ORI', 'IDTEACH_ORI', 'Region', 'Small_Groups', 'Team_Teaching', 'Teacher_Exper')
 
 tch_sus_science <- tch_sus %>% filter(subject_science == 1) %>%
-  select(IDSCHOOL, IDTEACH, StratNameENG, n26_1, n26_3, n3_1)
+  select(IDSCHOOL, IDTEACH, StratNameENG, n24_1, n24_3, n3_1)
 names(tch_sus_science) <- c('IDSCHOOL_ORI', 'IDTEACH_ORI', 'Region', 'Small_Groups', 'Team_Teaching', 'Teacher_Exper')
 
 
-# Averaging by teachers if they appear within a subject area several times
 # Function: summarise numeric columns, return first value of non-numeric (regions in our case)
 summarise_by_col_class <- function(x){
-  if(is.numeric(x)){
-    return(median(x, na.rm = T))
-  }
-  else{
-    nth(x, 1)
-  }
+   if(is.numeric(x)){
+     return(median(x, na.rm = T))
+   }
+   else{
+     nth(x, 1)
+   }
 }
 
-tch_sus_math %<>% group_by(IDSCHOOL_ORI, IDTEACH_ORI, Region) %>%
-  summarise_all(summarise_by_col_class) %>% ungroup()
-
-tch_sus_science %<>% group_by(IDSCHOOL_ORI, IDTEACH_ORI, Region) %>%
-  summarise_all(summarise_by_col_class) %>% ungroup()
+## Averaging by teachers if they appear within a subject area several times: I refused from that step for now
+# table(duplicated(tch_sus_math$IDTEACH_ORI))
+# table(duplicated(tch_sus_science$IDTEACH_ORI))
+# 
+# tch_sus_math %<>% group_by(IDSCHOOL_ORI, IDTEACH_ORI, Region) %>%
+#   summarise_all(summarise_by_col_class) %>% ungroup()
+# 
+# tch_sus_science %<>% group_by(IDSCHOOL_ORI, IDTEACH_ORI, Region) %>%
+#   summarise_all(summarise_by_col_class) %>% ungroup()
 
 ### TIMSS
 
@@ -73,12 +76,14 @@ setwd(paste0("C:/Users/", Sys.getenv("USERNAME"), '/YandexDisk/SUS_TIMSS/Data/TI
 bstrusm7 <- read.spss('bstrusm7.sav', use.value.labels = F, to.data.frame = T)  %>%
   select(IDSCHOOL_ORI, IDCLASS_ORI, IDSTUD_ORI, IDTEACH_ORI,
          BSMMAT01, BSMMAT02, BSMMAT03, BSMMAT04, BSMMAT05,
-         BSSSCI01, BSSSCI02, BSSSCI03, BSSSCI04, BSSSCI05)
+         BSSSCI01, BSSSCI02, BSSSCI03, BSSSCI04, BSSSCI05,
+         TOTWGT)
 
 # Students' SES
 bsgrusm7 <- read.spss('bsgrusm7.sav', use.value.labels = F, to.data.frame = T) %>%
   select(IDSCHOOL_ORI, IDCLASS_ORI, IDSTUD_ORI, ITSEX, BSDAGE, BSBGHER, BSDGHER)
 
+# Merge SES and achievements
 stu_timss <- bstrusm7 %>%
   left_join(bsgrusm7, by = c('IDSCHOOL_ORI', 'IDCLASS_ORI', 'IDSTUD_ORI'))
 
@@ -115,7 +120,7 @@ science_timss_sus <- science_timss %>%
   left_join(tch_sus_science, by = c('IDSCHOOL_ORI', 'IDTEACH_ORI'))
 science_timss_sus$IDSUBJ <- NULL
 
-# Recode
+### Recode practices
 # Math
 practice_vars_math <- c('BTBG12B', 'BTBG12D', 'BTBG12E',  'BTBG12F', 'BTBG12G', 'BTBM15A', 'BTBM15B', 'BTBM15C', 'BTBM15D', 'BTBM15E', 'BTBM15F')
 practice_vars_math_n <- which(colnames(math_timss_sus) %in% practice_vars_math)
@@ -136,7 +141,12 @@ science_timss_sus[,practice_vars_science_n] <- sapply(science_timss_sus[,practic
 #lapply(1:ncol(math_timss_sus), function(i){class(math_timss_sus[,i])})
 #lapply(1:ncol(science_timss_sus), function(i){class(science_timss_sus[,i])})
 
-# Averaging by students within subject areas (since each student can have several teachers)
+################# Averaging by students within subject areas (since each student can have several teachers)
+
+# Duplicated IDSTUD_ORI
+table(duplicated(math_timss_sus$IDSTUD_ORI))
+table(duplicated(science_timss_sus$IDSTUD_ORI))
+
 math_timss_sus$IDTEACH_ORI <- NULL
 math_timss_sus %<>% group_by(IDSCHOOL_ORI, IDCLASS_ORI, IDSTUD_ORI) %>%
   summarise_all(summarise_by_col_class) %>% ungroup()
@@ -153,103 +163,78 @@ science_timss_sus <- science_timss_sus[,c(which(names(science_timss_sus) == 'Reg
                                     1:(which(names(science_timss_sus) == 'Region') - 1),
                                     (which(names(science_timss_sus) == 'Region') + 1):ncol(science_timss_sus))]
 
-# Distributions
-# Science
-#list <- lapply(practice_vars_math_n,
-#               function(i) ggplot2::qplot(science_timss_sus[[i]],
-#                                          geom = "histogram",
-#                                          binwidth  = 1))
-
-#cowplot::plot_grid(plotlist = list)
-#hist(science_timss_sus$Small_Groups)
-#hist(science_timss_sus$Team_Teaching)
-
-# Math
-#list <- lapply(practice_vars_science_n,
-#               function(i) ggplot2::qplot(math_timss_sus[[i]],
-#                                          geom = "histogram",
- #                                         binwidth  = 1))
-
-#cowplot::plot_grid(plotlist = list)
-#hist(math_timss_sus$Small_Groups)
-#hist(math_timss_sus$Team_Teaching)
-
-################################################# Multiple imputations of missing values #################################################
-# MATH
-# Setting bounds for imputations
-max <- as.matrix(as.numeric(as.character(apply(math_timss_sus[,-1], 2 , max, na.rm = T))))
-max <- as.matrix(max[4:nrow(max),])
-
-min <- as.matrix(as.numeric(as.character(apply(math_timss_sus[,-1], 2 , min, na.rm=TRUE))))
-min <- as.matrix(min[4:nrow(min),])
-
-# Running imputation
-set.seed(123)
-amelia_math <- amelia(as.data.frame(math_timss_sus), m = 10, idvars = c("IDSCHOOL_ORI",
-                                                         "IDCLASS_ORI",
-                                                         "IDSTUD_ORI", 'Region'),
-                     bounds = cbind(5:ncol(math_timss_sus), min, max))
-
-imputed_math <- amelia_math$imputations$imp10
-math_timss_sus <- imputed_math
-
-
-# SCIENCE
-# Setting bounds for imputations
-max <- as.matrix(as.numeric(as.character(apply(science_timss_sus[,-1], 2 , max, na.rm=TRUE))))
-max <- as.matrix(max[4:nrow(max),])
-
-min <- as.matrix(as.numeric(as.character(apply(science_timss_sus[,-1], 2 , min, na.rm=TRUE))))
-min <- as.matrix(min[4:nrow(min),])
-
-# Running imputation
-set.seed(123)
-amelia_science <- amelia(as.data.frame(science_timss_sus), m = 10, idvars = c("IDSCHOOL_ORI", 
-                                                               "IDCLASS_ORI",
-                                                                "IDSTUD_ORI", 'Region'),
-                      bounds = cbind(5:ncol(science_timss_sus), min, max))
-
-imputed_science <- amelia_science$imputations$imp10
-science_timss_sus <- imputed_science
-
-# Checking distributions
-#lapply(19:ncol(math_timss_sus), function(i){table(math_timss_sus[,i])})
-#lapply(19:ncol(science_timss_sus), function(i){table(science_timss_sus[,i])})
 
 ################################################# Some Distributions #################################################
 
-# Math Scores
+# Listwise deletion of missing values
+summary(math_timss_sus)
+math_timss_sus <- as.data.frame(na.omit(math_timss_sus))
+
+summary(science_timss_sus)
+science_timss_sus <- as.data.frame(na.omit(science_timss_sus))
+
+# Math Scores as a factor
 cfa_math_scores <- '
 MATH =~ BSMMAT01 + BSMMAT02 + BSMMAT03 + BSMMAT04 + BSMMAT05
 '
-fit_cfa_math_scores  <- cfa(cfa_math_scores, data = math_timss_sus, std.lv = T)
+fit_cfa_math_scores  <- cfa(cfa_math_scores, data = math_timss_sus, std.lv = T, sampling.weights = 'TOTWGT')
 #summary(fit_cfa_math_scores, fit.measures = T, standardized = T)
 math_timss_sus$math_scores <- as.numeric(lavPredict(fit_cfa_math_scores) * sd(math_timss_sus$BSMMAT01) + 
   mean(math_timss_sus$BSMMAT01))
 
-# Math Scores
+# Math Scores as a factor
 cfa_science_scores <- '
 SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
 '
-fit_cfa_science_scores  <- cfa(cfa_science_scores, data = science_timss_sus, std.lv = T)
+fit_cfa_science_scores  <- cfa(cfa_science_scores, data = science_timss_sus, std.lv = T, sampling.weights = 'TOTWGT')
 #summary(fit_cfa_science_scores, fit.measures = T, standardized = T)
-science_timss_sus$science_scores <- as.numeric(lavPredict(fit_cfa_math_scores) * sd(science_timss_sus$BSSSCI02) +
+science_timss_sus$science_scores <- as.numeric(lavPredict(fit_cfa_science_scores) * sd(science_timss_sus$BSSSCI02) +
   mean(science_timss_sus$BSSSCI02))
 
-# Binarizing small groups and teach teaching
-math_timss_sus$Small_Groups_bin <- ifelse(math_timss_sus$Small_Groups == 1,0,1)
-math_timss_sus$Team_Teaching_bin <- ifelse(math_timss_sus$Team_Teaching == 1,0,1)
-science_timss_sus$Small_Groups_bin <- ifelse(science_timss_sus$Small_Groups == 1,0,1)
-science_timss_sus$Team_Teaching_bin <- ifelse(science_timss_sus$Team_Teaching == 1,0,1)
+# Dist
+table(math_timss_sus$Small_Groups)
+table(math_timss_sus$Team_Teaching)
+table(science_timss_sus$Small_Groups)
+table(science_timss_sus$Team_Teaching)
 
-# t.tests
+# Binarizing small groups and team teaching variables: Never vs. At least once a month
+# 1 = Never;
+# 2 = Once a month;
+# 3 = Once a week;
+# 4 = 2-4 times a week;
+# 5 = Every day;
+
+math_timss_sus$Small_Groups_bin <- ifelse(math_timss_sus$Small_Groups == 1, 0, 1)
+math_timss_sus$Team_Teaching_bin <- ifelse(math_timss_sus$Team_Teaching == 1, 0, 1)
+science_timss_sus$Small_Groups_bin <- ifelse(science_timss_sus$Small_Groups == 1, 0, 1)
+science_timss_sus$Team_Teaching_bin <- ifelse(science_timss_sus$Team_Teaching == 1, 0, 1)
+
+# t.tests weighted
+library(weights)
+
 # MATH
-t.test(BSMMAT05 ~ Small_Groups_bin, math_timss_sus)
-t.test(BSMMAT05 ~ Team_Teaching_bin, math_timss_sus)
+wtd.t.test(math_timss_sus$math_scores[math_timss_sus$Small_Groups_bin == 1],
+           math_timss_sus$math_scores[math_timss_sus$Small_Groups_bin == 0],
+           math_timss_sus$TOTWGT[math_timss_sus$Small_Groups_bin == 1],
+           math_timss_sus$TOTWGT[math_timss_sus$Small_Groups_bin == 0],
+           samedata = F)
+wtd.t.test(math_timss_sus$math_scores[math_timss_sus$Team_Teaching_bin == 1],
+           math_timss_sus$math_scores[math_timss_sus$Team_Teaching_bin == 0],
+           math_timss_sus$TOTWGT[math_timss_sus$Team_Teaching_bin == 1],
+           math_timss_sus$TOTWGT[math_timss_sus$Team_Teaching_bin == 0],
+           samedata = F)
 
 # SCIENCE
-t.test(BSMMAT04 ~ Small_Groups_bin, science_timss_sus)
-t.test(BSMMAT05 ~ Team_Teaching_bin, science_timss_sus)
+wtd.t.test(science_timss_sus$science_scores[science_timss_sus$Small_Groups_bin == 1],
+           science_timss_sus$science_scores[science_timss_sus$Small_Groups_bin == 0],
+           science_timss_sus$TOTWGT[science_timss_sus$Small_Groups_bin == 1],
+           science_timss_sus$TOTWGT[science_timss_sus$Small_Groups_bin == 0],
+           samedata = F)
+wtd.t.test(science_timss_sus$science_scores[science_timss_sus$Team_Teaching_bin == 1],
+           science_timss_sus$science_scores[science_timss_sus$Team_Teaching_bin == 0],
+           science_timss_sus$TOTWGT[science_timss_sus$Team_Teaching_bin == 1],
+           science_timss_sus$TOTWGT[science_timss_sus$Team_Teaching_bin == 0],
+           samedata = F)
 
 ######### Validating with graphs
 # MATH 
@@ -370,7 +355,7 @@ EFA3 <- factanal(formulaEFA,
                  rotation = "geominQ",
                  na.action = na.exclude)
 
-#print(loadings(EFA3), cutoff=0.2, sort=T) #Print all the loadings
+print(loadings(EFA3), cutoff=0.2, sort=T) #Print all the loadings
 
 # Exclude low loadings (12A, 12C) and 15G, 15H since they substantively differ from the rest of the items
 # Try 4 Factors
@@ -381,7 +366,7 @@ EFA4 <- factanal(formulaEFA,
                  rotation = "geominQ",
                  na.action = na.exclude)
 
-#print(loadings(EFA4), cutoff=0.2, sort=T) #Print all the loadings
+print(loadings(EFA4), cutoff=0.3, sort=T) #Print all the loadings
 
 ################# CFA
 # Model:
@@ -396,7 +381,7 @@ vars_to_scale <- c('BSMMAT01', 'BSMMAT02', 'BSMMAT03', 'BSMMAT04', 'BSMMAT05')
 math_timss_sus[vars_to_scale] <- scale(math_timss_sus[vars_to_scale])
 
 # Run Lavaan:
-fit_cfa_math  <- cfa(cfa_math, data = math_timss_sus, std.lv = T)
+fit_cfa_math  <- cfa(cfa_math, data = math_timss_sus, std.lv = T, sampling.weights = 'TOTWGT')
 summary(fit_cfa_math , fit.measures = T, standardized = T)
 
 # Create the path diagram:
@@ -455,7 +440,7 @@ TT__ind := d2*m1 + e2*m2 + f2*m3 + p2*m4
 TT__tot := m6 + TT__ind
 '
 
-fit_structural_math <- sem(structural_math, data = math_timss_sus)
+fit_structural_math <- sem(structural_math, data = math_timss_sus, sampling.weights = 'TOTWGT')
 #summary(fit_structural_math, fit.measures = T, standardized = T, modindices = F)
 # modindices(fit_structural_math, minimum.value = 10, sort=TRUE)[1:20,]
 
@@ -539,14 +524,14 @@ EFA3 <- factanal(formulaEFA,
 # Exclude low loadings
 # Try 4 Factors
 formulaEFA <- as.formula("~ BTBG12D +  BTBG12F + BTBG12G  + BTBS15B + 
-                         BTBS15C + BTBS15D + BTBS15E + BTBS15F + BTBS15G + BTBS15H + BTBS15I + BTBS15J + BTBS15K + BTBS15L")
+                          BTBS15D + BTBS15E + BTBS15F + BTBS15G + BTBS15H + BTBS15I + BTBS15J + BTBS15K + BTBS15L")
 EFA4 <- factanal(formulaEFA,
                  factors = 4,
                  data = science_timss_sus,
                  rotation = "geominQ",
                  na.action = na.exclude)
 
-#print(loadings(EFA4), cutoff=0.2, sort=T) #Print all the loadings
+print(loadings(EFA4), cutoff=0.3, sort=T) #Print all the loadings
 
 ################# CFA 
 vars_to_scale <- c('BSSSCI01', 'BSSSCI02', 'BSSSCI03', 'BSSSCI04', 'BSSSCI05')
@@ -562,8 +547,8 @@ SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
 '
 
 # Run Lavaan:
-fit_cfa_science  <- cfa(cfa_science, data = science_timss_sus, std.lv = T)
-#summary(fit_cfa_science , fit.measures = T, standardized = T)
+fit_cfa_science  <- cfa(cfa_science, data = science_timss_sus, std.lv = T, sampling.weights = 'TOTWGT')
+summary(fit_cfa_science , fit.measures = T, standardized = T)
 
 # Create the path diagram:
 #semPaths(fit_cfa_science, "std", title = F, curvePivot = T, intercepts = F,
@@ -625,7 +610,7 @@ SG__tot := m6 + SG__ind
 TT__ind := d2*m1 + ex2*m3 + me2*m4 + fw2*m5
 TT__tot := m7 + TT__ind
 '
-fit_structural_science <- sem(structural_science, data = science_timss_sus)
+fit_structural_science <- sem(structural_science, data = science_timss_sus, sampling.weights = 'TOTWGT')
 #summary(fit_structural_science, fit.measures = T, standardized = T, modindices = F)
 #modindices(fit_structural_science, minimum.value = 10, sort=TRUE)[1:20,]
 
