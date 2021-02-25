@@ -36,6 +36,11 @@ vars_to_scale <- c('BSMMAT01', 'BSMMAT02', 'BSMMAT03', 'BSMMAT04', 'BSMMAT05',
                    'BSSSCI01', 'BSSSCI02', 'BSSSCI03', 'BSSSCI04', 'BSSSCI05')
 stu_sus_timss[vars_to_scale] <- scale(stu_sus_timss[vars_to_scale])
 
+# Teaching styles as factor
+stu_sus_timss$traditional_style <- factor(stu_sus_timss$traditional_style,
+                                            labels = c('Modern Teaching Style',
+                                                       'Traditional Teaching Style'))
+
 # Model
 cfa <- '
 
@@ -57,6 +62,11 @@ Visibility =~ n16_0 + n16_1 + n16_2
 Temperature =~ n11_2 + n12_2 
 Comfort_furniture =~ n17_1 + n17_2
 Safety =~ n24_0 + n24_1 + n24_2 + n24_4
+
+# Pseudo factors
+
+psf_n_tech =~ n_tech
+psf_BSBGHER =~ BSBGHER
 
 
 # Outcomes
@@ -226,6 +236,7 @@ Math_Strong =~ BSBM19A + BSBM19C + BSBM19D + BSBM19F + BSBM19G + BSBM19H + BSBM1
 Student_Attitudes =~ Math_Important + Math_Enjoy + Math_Strong
 
 # School_Environment
+
 Audibility =~ n15_0 + n15_1
 Visibility =~ n16_0 + n16_1 + n16_2
 Temperature =~ n11_2 + n12_2 
@@ -235,27 +246,36 @@ Safety =~ n24_0 + n24_1 + n24_2 + n24_4
 Conditions =~ Audibility + Visibility + Temperature 
 
 # Formative Factors
+
 Teacher_Quality =~ 0
 Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Oderliness
 
+# Pseudo factors
+
+psf_n_tech =~ n_tech
+psf_BSBGHER =~ BSBGHER
+
 # Outcomes
+
 MATH =~ BSMMAT01 + BSMMAT02 + BSMMAT03 + BSMMAT04 + BSMMAT05
 SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
 WELLNESS =~ BSBG13E + BSBG13B + BSBG13C + BSBG13D + BSBG13A
 
 # Regressions:
-Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech
-MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER + ITSEX 
-SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER + ITSEX
-WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER + ITSEX
+
+Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER 
+SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
 '
 
 # Run Lavaan:
 fit_sem <- sem(sem, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
 summary(fit_sem , fit.measures = T, standardized = T)
 
+# For plotting
 fit_sem_multi <- sem(sem, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
-                          group = 'traditional_style')
+                          group = 'traditional_style', meanstructure = TRUE)
 
 # -----------------------------------------------------------------------------------------------------------------#
 # Structural Invariance of Mediation Paths
@@ -305,15 +325,15 @@ psf_BSBGHER =~ BSBGHER
 
 # Regressions
 
-Student_Attitudes ~ c(a, a)*Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
-MATH ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
-SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
-WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
+Student_Attitudes ~ c(a, a)*Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+MATH ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
 
 '
 fit_sem_1.1 <- sem(sem_1.1, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
-                    group = 'traditional_style', group.equal = 'loadings')
-anova(fit_cfa_metric_higher, fit_sem_1.1)
+                   group = 'traditional_style')
+anova_res1.1 <- anova(fit_sem_multi, fit_sem_1.1)
 
 
 # Teacher_Quality -> Student_Attitudes -> SCIENCE
@@ -360,14 +380,14 @@ psf_BSBGHER =~ BSBGHER
 
 # Regressions
 
-Student_Attitudes ~ c(a, a)*Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER 
-MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER   
-SCIENCE ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
-WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
+Student_Attitudes ~ c(a, a)*Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER 
+MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
 '
 fit_sem_1.2 <- sem(sem_1.2, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
-                    group = 'traditional_style', group.equal = "loadings")
-anova(fit_cfa_metric_higher, fit_sem_1.2)
+                   group = 'traditional_style')
+anova_res1.2 <- anova(fit_sem_multi, fit_sem_1.2)
 
 
 # Teacher_Quality -> Student_Attitudes -> WELLNESS
@@ -414,14 +434,14 @@ psf_BSBGHER =~ BSBGHER
 
 # Regressions
 
-Student_Attitudes ~ c(a, a)*Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER 
-MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER   
-SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
-WELLNESS ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
+Student_Attitudes ~ c(a, a)*Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER 
+MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
 '
 fit_sem_1.3 <- sem(sem_1.3, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
-                 group = 'traditional_style', group.equal = "loadings")
-anova(fit_cfa_metric_higher, fit_sem_1.3)
+                   group = 'traditional_style')
+anova_res1.3 <- anova(fit_sem_multi, fit_sem_1.3)
 
 
 # Comfort_furniture -> Student_Attitudes -> MATH
@@ -467,14 +487,14 @@ psf_BSBGHER =~ BSBGHER
 
 # Regressions
 
-Student_Attitudes ~ Teacher_Quality + c(a, a)*Comfort_furniture + Safety + Conditions + n_tech + BSBGHER 
-MATH ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER   
-SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
-WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
+Student_Attitudes ~ Teacher_Quality + c(a, a)*Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER 
+MATH ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
 '
 fit_sem_2.1 <- sem(sem_2.1, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
-                 group = 'traditional_style', group.equal = "loadings")
-anova(fit_cfa_metric_higher, fit_sem_2.1)
+                   group = 'traditional_style', group.equal = "loadings")
+anova_res2.1 <- anova(fit_sem_multi, fit_sem_2.1)
 
 # Comfort_furniture -> Student_Attitudes -> SCIENCE
 sem_2.2 <- '
@@ -519,14 +539,14 @@ psf_BSBGHER =~ BSBGHER
 
 # Regressions
 
-Student_Attitudes ~ Teacher_Quality + c(a, a)*Comfort_furniture + Safety + Conditions + n_tech + BSBGHER 
-MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER   
-SCIENCE ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
-WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
+Student_Attitudes ~ Teacher_Quality + c(a, a)*Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER 
+MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
 '
 fit_sem_2.2 <- sem(sem_2.2, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
-                   group = 'traditional_style', group.equal = "loadings")
-anova(fit_cfa_metric_higher, fit_sem_2.2)
+                   group = 'traditional_style')
+anova_res2.2 <- anova(fit_sem_multi, fit_sem_2.2)
 
 
 # Comfort_furniture -> Student_Attitudes -> WELLNESS
@@ -572,30 +592,502 @@ psf_BSBGHER =~ BSBGHER
 
 # Regressions
 
-Student_Attitudes ~ Teacher_Quality + c(a, a)*Comfort_furniture + Safety + Conditions + n_tech + BSBGHER 
-MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER   
-SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
-WELLNESS ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
+Student_Attitudes ~ Teacher_Quality + c(a, a)*Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER 
+MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
 '
 fit_sem_2.3 <- sem(sem_2.3, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
-                   group = 'traditional_style', group.equal = "loadings")
-anova(fit_cfa_metric_higher, fit_sem_2.3)
+                   group = 'traditional_style')
+anova_res2.3 <- anova(fit_sem_multi, fit_sem_2.3)
 
 
 # Safety -> Student_Attitudes -> MATH
+sem_3.1 <- '
+
+# Teacher_Quality
+
+Math_Teacher_Understandable =~ BSBM17B + BSBM17C + BSBM17D + BSBM17E + BSBM17F + BSBM17G
+Math_Teacher_Oderliness =~ BSBM18A + BSBM18B + BSBM18C + BSBM18D + BSBM18E + BSBM18F
+
+# Student_Attitudes
+
+Math_Important =~ BSBM20A + BSBM20B + BSBM20C + BSBM20D + BSBM20E + BSBM20F + BSBM20G + BSBM20I
+Math_Enjoy =~ BSBM16A + BSBM16B + BSBM16C + BSBM16D + BSBM16E + BSBM16F + BSBM16G + BSBM16H + BSBM16I
+Math_Strong =~ BSBM19A + BSBM19C + BSBM19D + BSBM19F + BSBM19G + BSBM19H + BSBM19I
+Student_Attitudes =~ Math_Important + Math_Enjoy + Math_Strong
+
+# School_Environment
+
+Audibility =~ n15_0 + n15_1
+Visibility =~ n16_0 + n16_1 + n16_2
+Temperature =~ n11_2 + n12_2 
+Comfort_furniture =~ n17_1 + n17_2
+Safety =~ n24_0 + n24_1 + n24_2 + n24_4
+
+Conditions =~ Audibility + Visibility + Temperature 
+
+# Formative Factors
+
+Teacher_Quality =~ 0
+Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Oderliness 
+
+# Outcomes
+
+MATH =~ BSMMAT01 + BSMMAT02 + BSMMAT03 + BSMMAT04 + BSMMAT05
+SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
+WELLNESS =~ BSBG13E + BSBG13B + BSBG13C + BSBG13D + BSBG13A
+
+# Pseudo factors
+
+psf_n_tech =~ n_tech
+psf_BSBGHER =~ BSBGHER
+
+# Regressions
+
+Student_Attitudes ~ Teacher_Quality + Comfort_furniture + c(a, a)*Safety + Conditions + psf_n_tech + psf_BSBGHER 
+MATH ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+'
+fit_sem_3.1 <- sem(sem_3.1, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+                   group = 'traditional_style')
+anova_res3.1 <- anova(fit_sem_multi, fit_sem_3.1)
+
 # Safety -> Student_Attitudes -> SCIENCE
+sem_3.2 <- '
+
+# Teacher_Quality
+
+Math_Teacher_Understandable =~ BSBM17B + BSBM17C + BSBM17D + BSBM17E + BSBM17F + BSBM17G
+Math_Teacher_Oderliness =~ BSBM18A + BSBM18B + BSBM18C + BSBM18D + BSBM18E + BSBM18F
+
+# Student_Attitudes
+
+Math_Important =~ BSBM20A + BSBM20B + BSBM20C + BSBM20D + BSBM20E + BSBM20F + BSBM20G + BSBM20I
+Math_Enjoy =~ BSBM16A + BSBM16B + BSBM16C + BSBM16D + BSBM16E + BSBM16F + BSBM16G + BSBM16H + BSBM16I
+Math_Strong =~ BSBM19A + BSBM19C + BSBM19D + BSBM19F + BSBM19G + BSBM19H + BSBM19I
+Student_Attitudes =~ Math_Important + Math_Enjoy + Math_Strong
+
+# School_Environment
+
+Audibility =~ n15_0 + n15_1
+Visibility =~ n16_0 + n16_1 + n16_2
+Temperature =~ n11_2 + n12_2 
+Comfort_furniture =~ n17_1 + n17_2
+Safety =~ n24_0 + n24_1 + n24_2 + n24_4
+
+Conditions =~ Audibility + Visibility + Temperature 
+
+# Formative Factors
+
+Teacher_Quality =~ 0
+Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Oderliness 
+
+# Outcomes
+
+MATH =~ BSMMAT01 + BSMMAT02 + BSMMAT03 + BSMMAT04 + BSMMAT05
+SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
+WELLNESS =~ BSBG13E + BSBG13B + BSBG13C + BSBG13D + BSBG13A
+
+# Pseudo factors
+
+psf_n_tech =~ n_tech
+psf_BSBGHER =~ BSBGHER
+
+# Regressions
+
+Student_Attitudes ~ Teacher_Quality + Comfort_furniture + c(a, a)*Safety + Conditions + psf_n_tech + psf_BSBGHER 
+MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+'
+fit_sem_3.2 <- sem(sem_3.2, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+                   group = 'traditional_style')
+anova_res3.2 <- anova(fit_sem_multi, fit_sem_3.2)
+
 # Safety -> Student_Attitudes -> WELLNESS
+sem_3.3 <- '
+
+# Teacher_Quality
+
+Math_Teacher_Understandable =~ BSBM17B + BSBM17C + BSBM17D + BSBM17E + BSBM17F + BSBM17G
+Math_Teacher_Oderliness =~ BSBM18A + BSBM18B + BSBM18C + BSBM18D + BSBM18E + BSBM18F
+
+# Student_Attitudes
+
+Math_Important =~ BSBM20A + BSBM20B + BSBM20C + BSBM20D + BSBM20E + BSBM20F + BSBM20G + BSBM20I
+Math_Enjoy =~ BSBM16A + BSBM16B + BSBM16C + BSBM16D + BSBM16E + BSBM16F + BSBM16G + BSBM16H + BSBM16I
+Math_Strong =~ BSBM19A + BSBM19C + BSBM19D + BSBM19F + BSBM19G + BSBM19H + BSBM19I
+Student_Attitudes =~ Math_Important + Math_Enjoy + Math_Strong
+
+# School_Environment
+
+Audibility =~ n15_0 + n15_1
+Visibility =~ n16_0 + n16_1 + n16_2
+Temperature =~ n11_2 + n12_2 
+Comfort_furniture =~ n17_1 + n17_2
+Safety =~ n24_0 + n24_1 + n24_2 + n24_4
+
+Conditions =~ Audibility + Visibility + Temperature 
+
+# Formative Factors
+
+Teacher_Quality =~ 0
+Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Oderliness 
+
+# Outcomes
+
+MATH =~ BSMMAT01 + BSMMAT02 + BSMMAT03 + BSMMAT04 + BSMMAT05
+SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
+WELLNESS =~ BSBG13E + BSBG13B + BSBG13C + BSBG13D + BSBG13A
+
+# Pseudo factors
+
+psf_n_tech =~ n_tech
+psf_BSBGHER =~ BSBGHER
+
+# Regressions
+
+Student_Attitudes ~ Teacher_Quality + Comfort_furniture + c(a, a)*Safety + Conditions + psf_n_tech + psf_BSBGHER 
+MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+'
+fit_sem_3.3 <- sem(sem_3.3, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+                   group = 'traditional_style')
+anova_res3.3 <- anova(fit_sem_multi, fit_sem_3.3)
+
 
 # Conditions -> Student_Attitudes -> MATH
+sem_4.1 <- '
+
+# Teacher_Quality
+
+Math_Teacher_Understandable =~ BSBM17B + BSBM17C + BSBM17D + BSBM17E + BSBM17F + BSBM17G
+Math_Teacher_Oderliness =~ BSBM18A + BSBM18B + BSBM18C + BSBM18D + BSBM18E + BSBM18F
+
+# Student_Attitudes
+
+Math_Important =~ BSBM20A + BSBM20B + BSBM20C + BSBM20D + BSBM20E + BSBM20F + BSBM20G + BSBM20I
+Math_Enjoy =~ BSBM16A + BSBM16B + BSBM16C + BSBM16D + BSBM16E + BSBM16F + BSBM16G + BSBM16H + BSBM16I
+Math_Strong =~ BSBM19A + BSBM19C + BSBM19D + BSBM19F + BSBM19G + BSBM19H + BSBM19I
+Student_Attitudes =~ Math_Important + Math_Enjoy + Math_Strong
+
+# School_Environment
+
+Audibility =~ n15_0 + n15_1
+Visibility =~ n16_0 + n16_1 + n16_2
+Temperature =~ n11_2 + n12_2 
+Comfort_furniture =~ n17_1 + n17_2
+Safety =~ n24_0 + n24_1 + n24_2 + n24_4
+
+Conditions =~ Audibility + Visibility + Temperature 
+
+# Formative Factors
+
+Teacher_Quality =~ 0
+Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Oderliness 
+
+# Outcomes
+
+MATH =~ BSMMAT01 + BSMMAT02 + BSMMAT03 + BSMMAT04 + BSMMAT05
+SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
+WELLNESS =~ BSBG13E + BSBG13B + BSBG13C + BSBG13D + BSBG13A
+
+# Pseudo factors
+
+psf_n_tech =~ n_tech
+psf_BSBGHER =~ BSBGHER
+
+# Regressions
+
+Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + c(a, a)*Conditions + psf_n_tech + psf_BSBGHER 
+MATH ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+'
+fit_sem_4.1 <- sem(sem_4.1, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+                   group = 'traditional_style')
+anova_res4.1 <- anova(fit_sem_multi, fit_sem_4.1)
+
 # Conditions -> Student_Attitudes -> SCIENCE
+sem_4.2 <- '
+
+# Teacher_Quality
+
+Math_Teacher_Understandable =~ BSBM17B + BSBM17C + BSBM17D + BSBM17E + BSBM17F + BSBM17G
+Math_Teacher_Oderliness =~ BSBM18A + BSBM18B + BSBM18C + BSBM18D + BSBM18E + BSBM18F
+
+# Student_Attitudes
+
+Math_Important =~ BSBM20A + BSBM20B + BSBM20C + BSBM20D + BSBM20E + BSBM20F + BSBM20G + BSBM20I
+Math_Enjoy =~ BSBM16A + BSBM16B + BSBM16C + BSBM16D + BSBM16E + BSBM16F + BSBM16G + BSBM16H + BSBM16I
+Math_Strong =~ BSBM19A + BSBM19C + BSBM19D + BSBM19F + BSBM19G + BSBM19H + BSBM19I
+Student_Attitudes =~ Math_Important + Math_Enjoy + Math_Strong
+
+# School_Environment
+
+Audibility =~ n15_0 + n15_1
+Visibility =~ n16_0 + n16_1 + n16_2
+Temperature =~ n11_2 + n12_2 
+Comfort_furniture =~ n17_1 + n17_2
+Safety =~ n24_0 + n24_1 + n24_2 + n24_4
+
+Conditions =~ Audibility + Visibility + Temperature 
+
+# Formative Factors
+
+Teacher_Quality =~ 0
+Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Oderliness 
+
+# Outcomes
+
+MATH =~ BSMMAT01 + BSMMAT02 + BSMMAT03 + BSMMAT04 + BSMMAT05
+SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
+WELLNESS =~ BSBG13E + BSBG13B + BSBG13C + BSBG13D + BSBG13A
+
+# Pseudo factors
+
+psf_n_tech =~ n_tech
+psf_BSBGHER =~ BSBGHER
+
+# Regressions
+
+Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + c(a, a)*Conditions + psf_n_tech + psf_BSBGHER 
+MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+'
+fit_sem_4.2 <- sem(sem_4.2, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+                   group = 'traditional_style')
+anova_res4.2 <- anova(fit_sem_multi, fit_sem_4.2)
+
 # Conditions -> Student_Attitudes -> WELLNESS
+sem_4.3 <- '
+
+# Teacher_Quality
+
+Math_Teacher_Understandable =~ BSBM17B + BSBM17C + BSBM17D + BSBM17E + BSBM17F + BSBM17G
+Math_Teacher_Oderliness =~ BSBM18A + BSBM18B + BSBM18C + BSBM18D + BSBM18E + BSBM18F
+
+# Student_Attitudes
+
+Math_Important =~ BSBM20A + BSBM20B + BSBM20C + BSBM20D + BSBM20E + BSBM20F + BSBM20G + BSBM20I
+Math_Enjoy =~ BSBM16A + BSBM16B + BSBM16C + BSBM16D + BSBM16E + BSBM16F + BSBM16G + BSBM16H + BSBM16I
+Math_Strong =~ BSBM19A + BSBM19C + BSBM19D + BSBM19F + BSBM19G + BSBM19H + BSBM19I
+Student_Attitudes =~ Math_Important + Math_Enjoy + Math_Strong
+
+# School_Environment
+
+Audibility =~ n15_0 + n15_1
+Visibility =~ n16_0 + n16_1 + n16_2
+Temperature =~ n11_2 + n12_2 
+Comfort_furniture =~ n17_1 + n17_2
+Safety =~ n24_0 + n24_1 + n24_2 + n24_4
+
+Conditions =~ Audibility + Visibility + Temperature 
+
+# Formative Factors
+
+Teacher_Quality =~ 0
+Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Oderliness 
+
+# Outcomes
+
+MATH =~ BSMMAT01 + BSMMAT02 + BSMMAT03 + BSMMAT04 + BSMMAT05
+SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
+WELLNESS =~ BSBG13E + BSBG13B + BSBG13C + BSBG13D + BSBG13A
+
+# Pseudo factors
+
+psf_n_tech =~ n_tech
+psf_BSBGHER =~ BSBGHER
+
+# Regressions
+
+Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + c(a, a)*Conditions + psf_n_tech + psf_BSBGHER 
+MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+'
+fit_sem_4.3 <- sem(sem_4.3, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+                   group = 'traditional_style')
+anova_res4.3 <- anova(fit_sem_multi, fit_sem_4.3)
+
 
 # n_tech -> Student_Attitudes -> MATH
+sem_5.1 <- '
+
+# Teacher_Quality
+
+Math_Teacher_Understandable =~ BSBM17B + BSBM17C + BSBM17D + BSBM17E + BSBM17F + BSBM17G
+Math_Teacher_Oderliness =~ BSBM18A + BSBM18B + BSBM18C + BSBM18D + BSBM18E + BSBM18F
+
+# Student_Attitudes
+
+Math_Important =~ BSBM20A + BSBM20B + BSBM20C + BSBM20D + BSBM20E + BSBM20F + BSBM20G + BSBM20I
+Math_Enjoy =~ BSBM16A + BSBM16B + BSBM16C + BSBM16D + BSBM16E + BSBM16F + BSBM16G + BSBM16H + BSBM16I
+Math_Strong =~ BSBM19A + BSBM19C + BSBM19D + BSBM19F + BSBM19G + BSBM19H + BSBM19I
+Student_Attitudes =~ Math_Important + Math_Enjoy + Math_Strong
+
+# School_Environment
+
+Audibility =~ n15_0 + n15_1
+Visibility =~ n16_0 + n16_1 + n16_2
+Temperature =~ n11_2 + n12_2 
+Comfort_furniture =~ n17_1 + n17_2
+Safety =~ n24_0 + n24_1 + n24_2 + n24_4
+
+Conditions =~ Audibility + Visibility + Temperature 
+
+# Formative Factors
+
+Teacher_Quality =~ 0
+Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Oderliness 
+
+# Outcomes
+
+MATH =~ BSMMAT01 + BSMMAT02 + BSMMAT03 + BSMMAT04 + BSMMAT05
+SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
+WELLNESS =~ BSBG13E + BSBG13B + BSBG13C + BSBG13D + BSBG13A
+
+# Pseudo factors
+
+psf_n_tech =~ n_tech
+psf_BSBGHER =~ BSBGHER
+
+# Regressions
+
+Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + Conditions + c(a, a)*n_tech + BSBGHER 
+MATH ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+'
+fit_sem_5.1 <- sem(sem_5.1, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+                   group = 'traditional_style')
+anova_res5.1 <- anova(fit_sem_multi, fit_sem_5.1)
+
 # n_tech -> Student_Attitudes -> SCIENCE
+sem_5.2 <- '
+
+# Teacher_Quality
+
+Math_Teacher_Understandable =~ BSBM17B + BSBM17C + BSBM17D + BSBM17E + BSBM17F + BSBM17G
+Math_Teacher_Oderliness =~ BSBM18A + BSBM18B + BSBM18C + BSBM18D + BSBM18E + BSBM18F
+
+# Student_Attitudes
+
+Math_Important =~ BSBM20A + BSBM20B + BSBM20C + BSBM20D + BSBM20E + BSBM20F + BSBM20G + BSBM20I
+Math_Enjoy =~ BSBM16A + BSBM16B + BSBM16C + BSBM16D + BSBM16E + BSBM16F + BSBM16G + BSBM16H + BSBM16I
+Math_Strong =~ BSBM19A + BSBM19C + BSBM19D + BSBM19F + BSBM19G + BSBM19H + BSBM19I
+Student_Attitudes =~ Math_Important + Math_Enjoy + Math_Strong
+
+# School_Environment
+
+Audibility =~ n15_0 + n15_1
+Visibility =~ n16_0 + n16_1 + n16_2
+Temperature =~ n11_2 + n12_2 
+Comfort_furniture =~ n17_1 + n17_2
+Safety =~ n24_0 + n24_1 + n24_2 + n24_4
+
+Conditions =~ Audibility + Visibility + Temperature 
+
+# Formative Factors
+
+Teacher_Quality =~ 0
+Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Oderliness 
+
+# Outcomes
+
+MATH =~ BSMMAT01 + BSMMAT02 + BSMMAT03 + BSMMAT04 + BSMMAT05
+SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
+WELLNESS =~ BSBG13E + BSBG13B + BSBG13C + BSBG13D + BSBG13A
+
+# Pseudo factors
+
+psf_n_tech =~ n_tech
+psf_BSBGHER =~ BSBGHER
+
+# Regressions
+
+Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + Conditions + c(a, a)*n_tech + BSBGHER 
+MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+'
+fit_sem_5.2 <- sem(sem_5.2, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+                   group = 'traditional_style')
+anova_res5.2 <- anova(fit_sem_multi, fit_sem_5.2)
+
 # n_tech -> Student_Attitudes -> WELLNESS
+sem_5.3 <- '
+
+# Teacher_Quality
+
+Math_Teacher_Understandable =~ BSBM17B + BSBM17C + BSBM17D + BSBM17E + BSBM17F + BSBM17G
+Math_Teacher_Oderliness =~ BSBM18A + BSBM18B + BSBM18C + BSBM18D + BSBM18E + BSBM18F
+
+# Student_Attitudes
+
+Math_Important =~ BSBM20A + BSBM20B + BSBM20C + BSBM20D + BSBM20E + BSBM20F + BSBM20G + BSBM20I
+Math_Enjoy =~ BSBM16A + BSBM16B + BSBM16C + BSBM16D + BSBM16E + BSBM16F + BSBM16G + BSBM16H + BSBM16I
+Math_Strong =~ BSBM19A + BSBM19C + BSBM19D + BSBM19F + BSBM19G + BSBM19H + BSBM19I
+Student_Attitudes =~ Math_Important + Math_Enjoy + Math_Strong
+
+# School_Environment
+
+Audibility =~ n15_0 + n15_1
+Visibility =~ n16_0 + n16_1 + n16_2
+Temperature =~ n11_2 + n12_2 
+Comfort_furniture =~ n17_1 + n17_2
+Safety =~ n24_0 + n24_1 + n24_2 + n24_4
+
+Conditions =~ Audibility + Visibility + Temperature 
+
+# Formative Factors
+
+Teacher_Quality =~ 0
+Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Oderliness 
+
+# Outcomes
+
+MATH =~ BSMMAT01 + BSMMAT02 + BSMMAT03 + BSMMAT04 + BSMMAT05
+SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
+WELLNESS =~ BSBG13E + BSBG13B + BSBG13C + BSBG13D + BSBG13A
+
+# Pseudo factors
+
+psf_n_tech =~ n_tech
+psf_BSBGHER =~ BSBGHER
+
+# Regressions
+
+Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + Conditions + c(a, a)*n_tech + BSBGHER 
+MATH ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER   
+SCIENCE ~ Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+WELLNESS ~ c(b, b)*Student_Attitudes + Teacher_Quality + Comfort_furniture + Safety + Conditions + psf_n_tech + psf_BSBGHER
+'
+fit_sem_5.3 <- sem(sem_5.3, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+                   group = 'traditional_style')
+anova_res5.3 <- anova(fit_sem_multi, fit_sem_5.3)
 
 
-
+anova_res1.1
+anova_res1.2
+anova_res1.3
+anova_res2.1
+anova_res2.2
+anova_res2.3
+anova_res3.1
+anova_res3.2
+anova_res3.3
+anova_res4.1
+anova_res4.2
+anova_res4.3
+anova_res5.1
+anova_res5.2
+anova_res5.3
 
 
 
