@@ -1,0 +1,355 @@
+---
+title: 'Effect of the School Learning Environment on Students’ Outcomes: Comparing Modern and Traditional Teaching Styles'
+output:
+  html_notebook:
+    code_folding: hide
+    highlight: kate
+    theme: paper
+  html_document:
+    df_print: paged
+---
+
+This notebook examines the relationship between teacher quality, learning environment and academic achievements/wellness of students. Specifically, this analysis compares the mediation effects of teacher quality/learning space on students' outcomes through their attitudes towards math by teaching styles (modern and traditional). Methodologically, this notebook represents the results of the multigroup Structural Equations Modelling (SEM).
+
+A set of variables under consideration:
+
+* **Teaching Styles**: TRADITIONAL (Teaches use layouts that support explicit instruction/ presentation _everyday_ AND _never_ need to rearrange tables, chairs or other aspects of the space (e.g. sliding partitions) prior to the start of a lesson because a previous user had them in a different position) 
+vs. MODERN (the rest)
+* **Math and Science Achievements**, constructed as factor scores from five plausible values (TIMSS).
+* **Wellness** - factor scores from items on students' evaluation of their school (Q13 TIMSS).
+* **Students Beliefs and Attitudes** - a higher order reflective factor composed of 3 factors representing if students enjoy math, if they think math is important, and if they are good at math (Q16, Q19, Q20 TIMSS).
+* **Teacher Quality** - a formative construct, which included 2 reflective factors depicting if a teacher is understandable and if classes are well-organised (Q17, Q18 TIMSS).
+* **Spatial Measures (SUS)**:
+  * Technology - a number of learning tasks for which technology devices were used in a typical week.
+  * Safety - a factor on manifest variables about feeling at ease in school.
+  * Comfort Furniture - a factor on items about comfortability of desks/tables and chairs in the rooms students use.
+  * Class Conditions - a higher order reflective construct composed of 3 factors: audibility (students hear everything clearly in the rooms where they have lessons), visibility (students clearly see everything that is shown in different rooms), temperature (temperature in the rooms is comfortable).
+
+
+### Exploratory View
+
+The density graph below shows that students perform better in MATH, MATH APPLYING, MATH REASONING, MATH KNOWING if teachers exploit a **modern style**. The subsequent t-test reverberates this observation: the differences in mean math scores in the teaching groups discussed are statistically significant.
+
+
+```{r Density Plots}
+library(hrbrthemes)
+library(ggpubr)
+library(ggplot2)
+
+# Math
+p1 <- stu_sus_timss %>%
+  ggplot(aes(x = math_scores, fill = factor(traditional_style,
+                                            labels = c('Modern Teaching Style',
+                                                       'Traditional Teaching Style'))))  +
+  geom_density(alpha = .3) + 
+  theme_classic() +
+  scale_fill_manual(values = c('deepskyblue2', 'darksalmon')) +
+  labs(x = "Scores", y = "Density", fill = "") + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 1, 'math_scores'])),  
+             color = "darksalmon", linetype = "dashed", size = 1.5) + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 0, 'math_scores'])),  
+             color = "deepskyblue2", linetype = "dashed", size = 1.5) + 
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+        legend.position = "bottom") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 1, 'math_scores']), 1)),
+                                           "\nMean Score"), x = 400, y = 0.003, size = 4,
+                    colour = "darksalmon") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 0, 'math_scores']), 1)),
+                                           "\nMean Score"), x = 700, y = 0.003, size = 4,
+                    colour = "deepskyblue2") +
+  theme(legend.text = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        plot.subtitle = element_text(colour = "red"))+ 
+   labs(subtitle = 'Math**')
+
+# Science
+p2 <- stu_sus_timss %>%
+  ggplot(aes(x = science_scores, fill = factor(traditional_style,
+                                            labels = c('Modern Teaching Style',
+                                                       'Traditional Teaching Style'))))  +
+  geom_density(alpha = .3) + 
+  theme_classic() +
+  scale_fill_manual(values = c('deepskyblue2', 'darksalmon')) +
+  labs(x = "Scores", y = "Density", fill = "") + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 1, 'science_scores'])),  
+             color = "darksalmon", linetype = "dashed", size = 1.5) + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 0, 'science_scores'])),  
+             color = "deepskyblue2", linetype = "dashed", size = 1.5) + 
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+        legend.position = "bottom") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 1, 'science_scores']), 1)),
+                                           "\nMean Score"), x = 400, y = 0.003, size = 4,
+                    colour = "darksalmon") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 0, 'science_scores']), 1)),
+                                           "\nMean Score"), x = 700, y = 0.003, size = 4,
+                    colour = "deepskyblue2") +
+  theme(legend.text = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        plot.subtitle = element_text(colour = "red")) + 
+   labs(subtitle = 'Science')
+
+# Wellness
+p3 <- stu_sus_timss %>%
+  ggplot(aes(x = wellness, fill = factor(traditional_style,
+                                            labels = c('Modern Teaching Style',
+                                                       'Traditional Teaching Style'))))  +
+  geom_density(alpha = .3) + 
+  theme_classic() +
+  scale_fill_manual(values = c('deepskyblue2', 'darksalmon')) +
+  labs(x = "Scores", y = "Density", fill = "") + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 1, 'wellness'])),  
+             color = "darksalmon", linetype = "dashed", size = 1.5) + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 0, 'wellness'])),  
+             color = "deepskyblue2", linetype = "dashed", size = 1.5) + 
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+        legend.position = "bottom") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 1, 'wellness']), 1)),
+                                           "\nMean Score"), x = 2, y = 0.3, size = 4,
+                    colour = "darksalmon") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 0, 'wellness']), 1)),
+                                           "\nMean Score"), x = 4, y = 0.3, size = 4,
+                    colour = "deepskyblue2") +
+  theme(legend.text = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        plot.subtitle = element_text(colour = "red")) + 
+   labs(subtitle = 'Wellness')
+
+# Math Reasoning
+p4 <- stu_sus_timss %>%
+  ggplot(aes(x = math_reason_scores, fill = factor(traditional_style,
+                                            labels = c('Modern Teaching Style',
+                                                       'Traditional Teaching Style'))))  +
+  geom_density(alpha = .3) + 
+  theme_classic() +
+  scale_fill_manual(values = c('deepskyblue2', 'darksalmon')) +
+  labs(x = "Scores", y = "Density", fill = "") + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 1, 'math_reason_scores'])),  
+             color = "darksalmon", linetype = "dashed", size = 1.5) + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 0, 'math_reason_scores'])),  
+             color = "deepskyblue2", linetype = "dashed", size = 1.5) + 
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+        legend.position = "bottom") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 1, 'math_reason_scores']), 1)),
+                                           "\nMean Score"), x = 400, y = 0.003, size = 4,
+                    colour = "darksalmon") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 0, 'math_reason_scores']), 1)),
+                                           "\nMean Score"), x = 700, y = 0.003, size = 4,
+                    colour = "deepskyblue2") +
+  theme(legend.text = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        plot.subtitle = element_text(colour = "red")) + 
+   labs(subtitle = 'Math Reasoning**')
+
+# Science Reasoning
+p5 <- stu_sus_timss %>%
+  ggplot(aes(x = science_reason_scores, fill = factor(traditional_style,
+                                            labels = c('Modern Teaching Style',
+                                                       'Traditional Teaching Style'))))  +
+  geom_density(alpha = .3) + 
+  theme_classic() +
+  scale_fill_manual(values = c('deepskyblue2', 'darksalmon')) +
+  labs(x = "Scores", y = "Density", fill = "") + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 1, 'science_reason_scores'])),  
+             color = "darksalmon", linetype = "dashed", size = 1.5) + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 0, 'science_reason_scores'])),  
+             color = "deepskyblue2", linetype = "dashed", size = 1.5) + 
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+        legend.position = "bottom") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 1, 'science_reason_scores']), 1)),
+                                           "\nMean Score"), x = 400, y = 0.003, size = 4,
+                    colour = "darksalmon") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 0, 'science_reason_scores']), 1)),
+                                           "\nMean Score"), x = 700, y = 0.003, size = 4,
+                    colour = "deepskyblue2") +
+  theme(legend.text = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        plot.subtitle = element_text(colour = "red")) + 
+   labs(subtitle = 'Science Reasoning')
+
+# Math Applying
+p6 <- stu_sus_timss %>%
+  ggplot(aes(x = math_appl_scores, fill = factor(traditional_style,
+                                            labels = c('Modern Teaching Style',
+                                                       'Traditional Teaching Style'))))  +
+  geom_density(alpha = .3) + 
+  theme_classic() +
+  scale_fill_manual(values = c('deepskyblue2', 'darksalmon')) +
+  labs(x = "Scores", y = "Density", fill = "") + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 1, 'math_appl_scores'])),  
+             color = "darksalmon", linetype = "dashed", size = 1.5) + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 0, 'math_appl_scores'])),  
+             color = "deepskyblue2", linetype = "dashed", size = 1.5) + 
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+        legend.position = "bottom") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 1, 'math_appl_scores']), 1)),
+                                           "\nMean Score"), x = 400, y = 0.003, size = 4,
+                    colour = "darksalmon") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 0, 'math_appl_scores']), 1)),
+                                           "\nMean Score"), x = 700, y = 0.003, size = 4,
+                    colour = "deepskyblue2") +
+  theme(legend.text = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        plot.subtitle = element_text(colour = "red")) + 
+   labs(subtitle = 'Math Applying**')
+
+# Science Applying
+p7 <- stu_sus_timss %>%
+  ggplot(aes(x = science_appl_scores, fill = factor(traditional_style,
+                                            labels = c('Modern Teaching Style',
+                                                       'Traditional Teaching Style'))))  +
+  geom_density(alpha = .3) + 
+  theme_classic() +
+  scale_fill_manual(values = c('deepskyblue2', 'darksalmon')) +
+  labs(x = "Scores", y = "Density", fill = "") + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 1, 'science_appl_scores'])),  
+             color = "darksalmon", linetype = "dashed", size = 1.5) + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 0, 'science_appl_scores'])),  
+             color = "deepskyblue2", linetype = "dashed", size = 1.5) + 
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+        legend.position = "bottom") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 1, 'science_appl_scores']), 1)),
+                                           "\nMean Score"), x = 400, y = 0.003, size = 4,
+                    colour = "darksalmon") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 0, 'science_appl_scores']), 1)),
+                                           "\nMean Score"), x = 700, y = 0.003, size = 4,
+                    colour = "deepskyblue2") +
+  theme(legend.text = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        plot.subtitle = element_text(colour = "red")) + 
+   labs(subtitle = 'Science Applying')
+
+# Math Knowing
+p8 <- stu_sus_timss %>%
+  ggplot(aes(x = math_know_scores, fill = factor(traditional_style,
+                                            labels = c('Modern Teaching Style',
+                                                       'Traditional Teaching Style'))))  +
+  geom_density(alpha = .3) + 
+  theme_classic() +
+  scale_fill_manual(values = c('deepskyblue2', 'darksalmon')) +
+  labs(x = "Scores", y = "Density", fill = "") + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 1, 'math_know_scores'])),  
+             color = "darksalmon", linetype = "dashed", size = 1.5) + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 0, 'math_know_scores'])),  
+             color = "deepskyblue2", linetype = "dashed", size = 1.5) + 
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+        legend.position = "bottom") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 1, 'math_know_scores']), 1)),
+                                           "\nMean Score"), x = 400, y = 0.003, size = 4,
+                    colour = "darksalmon") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 0, 'math_know_scores']), 1)),
+                                           "\nMean Score"), x = 700, y = 0.003, size = 4,
+                    colour = "deepskyblue2") +
+  theme(legend.text = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        plot.subtitle = element_text(colour = "red")) + 
+   labs(subtitle = 'Math Knowing*')
+
+# Science Knowing
+p9 <- stu_sus_timss %>%
+  ggplot(aes(x = science_know_scores, fill = factor(traditional_style,
+                                            labels = c('Modern Teaching Style',
+                                                       'Traditional Teaching Style'))))  +
+  geom_density(alpha = .3) + 
+  theme_classic() +
+  scale_fill_manual(values = c('deepskyblue2', 'darksalmon')) +
+  labs(x = "Scores", y = "Density", fill = "") + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 1, 'science_know_scores'])),  
+             color = "darksalmon", linetype = "dashed", size = 1.5) + 
+  geom_vline(aes(xintercept = mean(stu_sus_timss[traditional_style == 0, 'science_know_scores'])),  
+             color = "deepskyblue2", linetype = "dashed", size = 1.5) + 
+  theme(plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+        legend.position = "bottom") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 1, 'science_know_scores']), 1)),
+                                           "\nMean Score"), x = 400, y = 0.003, size = 4,
+                    colour = "darksalmon") + 
+  ggplot2::annotate("text", label = paste0(as.character(round(mean(stu_sus_timss[stu_sus_timss$traditional_style == 0, 'science_know_scores']), 1)),
+                                           "\nMean Score"), x = 700, y = 0.003, size = 4,
+                    colour = "deepskyblue2") +
+  theme(legend.text = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        plot.subtitle = element_text(colour = "red")) + 
+   labs(subtitle = 'Science Knowing')
+
+
+p12 <- ggarrange(p1, p2, ncol = 1, nrow = 2, common.legend = T, legend = 'bottom')
+p45 <- ggarrange(p4, p5, ncol = 1, nrow = 2, common.legend = T, legend = 'bottom')
+p67 <- ggarrange(p6, p7, ncol = 1, nrow = 2, common.legend = T, legend = 'bottom')
+p89 <- ggarrange(p8, p9, ncol = 1, nrow = 2, common.legend = T, legend = 'bottom')
+
+```
+
+```{r fig.height=5, fig.width=15}
+p12
+p45
+p67
+p89
+```
+
+```{r t-test for Math Scores}
+# t.tests
+# Math
+wtd.t.test(stu_sus_timss$math_scores[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$math_scores[stu_sus_timss$traditional_style == 0],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 0],
+           samedata = F)
+# Math Reasoning
+wtd.t.test(stu_sus_timss$math_reason_scores[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$math_reason_scores[stu_sus_timss$traditional_style == 0],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 0],
+           samedata = F)
+# Math Applying
+wtd.t.test(stu_sus_timss$math_appl_scores[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$math_appl_scores[stu_sus_timss$traditional_style == 0],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 0],
+           samedata = F)
+# Math Knowing
+wtd.t.test(stu_sus_timss$math_know_scores[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$math_know_scores[stu_sus_timss$traditional_style == 0],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 0],
+           samedata = F)
+```
+
+
+Further, we compare the mediated effects of Teacher Quality/Space on Achievements/Wellness BY teaching styles.
+
+### Analysis
+
+We created factor models for each students' outcomes separately and established the models' measurement invariance to proceed with comparison. In all models, goodness-of-fit criteria indicated models of high quality. The models assume the existence of only indirect effects; therefore, all direct relationships were set to zero on theoretical grounds (e.g., teacher quality cannot influence learning outcomes without influencing students themselves, i.e. their attitudes & beliefs).
+
+Green links depict positive effects, grey links -- the insignificant ones. The connections from the lower-order factors to the respective items are not shown (for readability purposes). Technology is the only observed measurement in the models. To calculate an indirect effect of a predictor to an outcome through a mediator, it is sufficient to multiply 2 coefficients -- the effect of a predictor on a mediator and of a mediator on an outcome.
+
+To determine which structural paths vary between modern and traditional styles and which do not, we implemented a multigroup SEM procedure by iteratively constraining to equality the effects of interest and comparing the constrained and free models.
+
+The main findings:
+
+* **Teacher Quality** positively affects all outcomes through improving students' attitudes towards math. This effect does not differ between teaching styles.
+
+* **Technology** (a number of learning tasks for which technology devices were used in a typical week) positively affects all outcomes through improving students' attitudes towards math. This effect is stronger for the modern style with regard to math, science, and (Math) applying.
+
+* **Comfort furniture** positively affects math, science, and (Math) applying through improving students' attitudes towards math only for the modern style; for the traditional style the association is not significant.
+
+* The rest of the effects are not statistically significant.
+
+
+
+```{r fig.height=8, fig.width=15}
+plot_multi_all[[1]]
+plot_multi_all[[2]]
+plot_multi_all[[3]]
+plot_multi_all[[4]]
+plot_multi_all[[5]]
+plot_multi_all[[6]]
+```

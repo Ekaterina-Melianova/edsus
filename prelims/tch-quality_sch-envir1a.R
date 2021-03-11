@@ -198,7 +198,7 @@ stu_sus[is.nan(stu_sus[,n24[5]]), n24[5]] <- NA
 ####  Creating non-factor learning environment variables:
 # - Number of spaces used during lesson time over the last week
 # - Number of outside spaces used 1-3 times per month or more often
-# - Number of learning task for which technology devices were used in a typical week
+# - Number of learning tasks for which technology devices were used in a typical week
 
 # Empty variables
 stu_sus$n_spaces <- NA 
@@ -247,7 +247,45 @@ bstrusm7 <- read.spss('bstrusm7.sav', use.value.labels = F, to.data.frame = T)  
   select(IDSCHOOL_ORI, IDCLASS_ORI, IDSTUD_ORI, IDTEACH_ORI,
          BSMMAT01, BSMMAT02, BSMMAT03, BSMMAT04, BSMMAT05,
          BSSSCI01, BSSSCI02, BSSSCI03, BSSSCI04, BSSSCI05,
-         TOTWGT)
+         TOTWGT,
+         # Math applying, knowing, reasoning
+         BSMAPP01,
+         BSMAPP02,
+         BSMAPP03,
+         BSMAPP04,
+         BSMAPP05,
+         
+         BSMKNO01,
+         BSMKNO02,
+         BSMKNO03,
+         BSMKNO04,
+         BSMKNO05,
+         
+         BSMREA01,
+         BSMREA02,
+         BSMREA03,
+         BSMREA04,
+         BSMREA05,
+         
+         # Science applying, knowing, reasoning
+         BSSAPP01,
+         BSSAPP02,
+         BSSAPP03,
+         BSSAPP04,
+         BSSAPP05,
+         
+         BSSKNO01,
+         BSSKNO02,
+         BSSKNO03,
+         BSSKNO04,
+         BSSKNO05,
+         
+         BSSREA01,
+         BSSREA02,
+         BSSREA03,
+         BSSREA04,
+         BSSREA05
+  )
 
 # Unique IDSTUD_ORI
 # bstrusm7 <- bstrusm7[!duplicated(bstrusm7$IDSTUD_ORI),]
@@ -454,7 +492,14 @@ ords <- names(stu_sus_timss)[!names(stu_sus_timss) %in%
                                c('exper', 'BSMMAT01', 'BSMMAT02', 'BSMMAT03', 'BSMMAT04',
                                  'BSMMAT05', 'BSSSCI01', 'BSSSCI02', 'BSSSCI03', 'BSSSCI04',
                                  'BSSSCI05', 'BSBG13E', 'BSBG13B',  'BSBG13C', 'BSBG13D', 
-                                 'BSBG13A', 'TOTWGT', 'BSDAGE', 'BSBGHER', idvars)]
+                                 'BSBG13A', 'TOTWGT', 'BSDAGE', 'BSBGHER',
+                                 'BSMAPP01','BSMAPP02', 'BSMAPP03', 'BSMAPP04', 'BSMAPP05',
+                                 'BSMKNO01', 'BSMKNO02',  'BSMKNO03', 'BSMKNO04', 'BSMKNO05',
+                                 'BSMREA01',  'BSMREA02', 'BSMREA03', 'BSMREA04','BSMREA05',
+                                 'BSSAPP01', 'BSSAPP02', 'BSSAPP03', 'BSSAPP04', 'BSSAPP05',
+                                 'BSSKNO01', 'BSSKNO02', 'BSSKNO03','BSSKNO04','BSSKNO05',
+                                 'BSSREA01','BSSREA02', 'BSSREA03', 'BSSREA04','BSSREA05',
+                                 idvars)]
 
 # Running imputation
 set.seed(123)
@@ -473,7 +518,7 @@ stu_sus_timss <- imputed
 ### Outcome variables: Wellness index and achievements 
 # -----------------------------------------------------------------------------------------------------------------#
 
-# Math Scores as a factor
+# Math
 cfa_math_scores <- '
 MATH =~ BSMMAT01 + BSMMAT02 + BSMMAT03 + BSMMAT04 + BSMMAT05
 '
@@ -481,8 +526,8 @@ fit_cfa_math_scores  <- cfa(cfa_math_scores, data = stu_sus_timss, std.lv = T, s
 #summary(fit_cfa_math_scores, fit.measures = T, standardized = T)
 stu_sus_timss$math_scores <- as.numeric(lavPredict(fit_cfa_math_scores) * sd(stu_sus_timss$BSMMAT01) + 
                                            mean(stu_sus_timss$BSMMAT01))
-
-# Science Scores as a factor
+###########
+# Science
 cfa_science_scores <- '
 SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
 '
@@ -490,9 +535,65 @@ fit_cfa_science_scores  <- cfa(cfa_science_scores, data = stu_sus_timss, std.lv 
 #summary(fit_cfa_science_scores, fit.measures = T, standardized = T)
 stu_sus_timss$science_scores <- as.numeric(lavPredict(fit_cfa_science_scores) * sd(stu_sus_timss$BSSSCI02) +
                                                  mean(stu_sus_timss$BSSSCI02))
+###########
+# Math Applying
+cfa_math_appl_scores <- '
+APPLYING_MATH =~ BSMAPP01 + BSMAPP02 + BSMAPP03 + BSMAPP04 + BSMAPP05 
+'
+fit_cfa_math_appl_scores  <- cfa(cfa_math_appl_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
+#summary(fit_cfa_math_appl_scores, fit.measures = T, standardized = T)
+stu_sus_timss$math_appl_scores <- as.numeric(lavPredict(fit_cfa_math_appl_scores) * sd(stu_sus_timss$BSMAPP01) + 
+                                          mean(stu_sus_timss$BSMAPP01))
+###########
+# Science Applying
+cfa_science_appl_scores <- '
+APPLYING_SCIENCE =~ BSSAPP01 + BSSAPP02 + BSSAPP03 + BSSAPP04 + BSSAPP05 
+'
+fit_cfa_science_appl_scores  <- cfa(cfa_science_appl_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
+#summary(fit_cfa_science_appl_scores, fit.measures = T, standardized = T)
+stu_sus_timss$science_appl_scores <- as.numeric(lavPredict(fit_cfa_science_appl_scores) * sd(stu_sus_timss$BSSAPP01) + 
+                                               mean(stu_sus_timss$BSSAPP01))
+###########
+# Math Reasoning
+cfa_math_reason_scores <- '
+REASONING_MATH =~ BSMREA01 + BSMREA02 + BSMREA03 + BSMREA04 + BSMREA05 
+'
+fit_cfa_math_reason_scores  <- cfa(cfa_math_reason_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
+#summary(fit_cfa_math_reason_scores, fit.measures = T, standardized = T)
+stu_sus_timss$math_reason_scores <- as.numeric(lavPredict(fit_cfa_math_reason_scores) * sd(stu_sus_timss$BSMREA01) + 
+                                               mean(stu_sus_timss$BSMREA01))
+###########
+# Science Reasoning
+cfa_science_reason_scores <- '
+REASONING_SCIENCE =~ BSSREA01 + BSSREA02 + BSSREA03 + BSSREA04 + BSSREA05 
+'
+fit_cfa_science_reason_scores  <- cfa(cfa_science_reason_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
+#summary(fit_cfa_science_reason_scores, fit.measures = T, standardized = T)
+stu_sus_timss$science_reason_scores <- as.numeric(lavPredict(fit_cfa_science_reason_scores) * sd(stu_sus_timss$BSSREA01) + 
+                                                  mean(stu_sus_timss$BSSREA01))
 
+###########
+# Math Knowing
+cfa_math_know_scores <- '
+KNOWING_MATH =~ BSMKNO01 + BSMKNO02 + BSMKNO03 + BSMKNO04 + BSMKNO05
+'
+fit_cfa_math_know_scores  <- cfa(cfa_math_know_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
+#summary(fit_cfa_science_know_scores, fit.measures = T, standardized = T)
+stu_sus_timss$math_know_scores <- as.numeric(lavPredict(fit_cfa_math_know_scores) * sd(stu_sus_timss$BSMKNO01) + 
+                                                  mean(stu_sus_timss$BSMKNO01))
 
-# Wellness as a factor
+###########
+# Science Knowing
+cfa_science_know_scores <- '
+KNOWING_SCIENCE =~ BSSKNO01 + BSSKNO02 + BSSKNO03 + BSSKNO04 + BSSKNO05 
+'
+fit_cfa_science_know_scores  <- cfa(cfa_science_know_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
+#summary(fit_cfa_science_know_scores, fit.measures = T, standardized = T)
+stu_sus_timss$science_know_scores <- as.numeric(lavPredict(fit_cfa_science_know_scores) * sd(stu_sus_timss$BSSKNO01) + 
+                                                    mean(stu_sus_timss$BSSKNO01))
+
+###########
+# Wellness
 cfa_wellness <- '
 WELLNESS =~ BSBG13E + BSBG13B + BSBG13C + BSBG13D + BSBG13A
 '
@@ -526,7 +627,47 @@ wtd.t.test(stu_sus_timss$wellness[stu_sus_timss$traditional_style == 1],
            stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 0],
            samedata = F)
 
+# Math Reasoning
+wtd.t.test(stu_sus_timss$math_reason_scores[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$math_reason_scores[stu_sus_timss$traditional_style == 0],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 0],
+           samedata = F)
 
+# Science Reasoning
+wtd.t.test(stu_sus_timss$science_reason_scores[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$science_reason_scores[stu_sus_timss$traditional_style == 0],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 0],
+           samedata = F)
+
+# Math Applying
+wtd.t.test(stu_sus_timss$math_appl_scores[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$math_appl_scores[stu_sus_timss$traditional_style == 0],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 0],
+           samedata = F)
+
+# Science Applying
+wtd.t.test(stu_sus_timss$science_appl_scores[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$science_appl_scores[stu_sus_timss$traditional_style == 0],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 0],
+           samedata = F)
+
+# Math Knowing
+wtd.t.test(stu_sus_timss$math_know_scores[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$math_know_scores[stu_sus_timss$traditional_style == 0],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 0],
+           samedata = F)
+
+# Science Knowing
+wtd.t.test(stu_sus_timss$science_know_scores[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$science_know_scores[stu_sus_timss$traditional_style == 0],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 1],
+           stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 0],
+           samedata = F)
 
 
 

@@ -680,5 +680,3 @@ path_fin$graphAttributes$Nodes$color <- c(rep('#E6E600FF', 3), rep('#EF8A62', 5)
                                           rep('#D1E5F0', 5), '#E6E600FF', '#EF8A62', '#FFBFFFFF',
                                           '#FDDBC7', '#D1E5F0')
 plot(path_fin)
-
-
