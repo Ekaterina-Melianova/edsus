@@ -669,5 +669,165 @@ wtd.t.test(stu_sus_timss$science_know_scores[stu_sus_timss$traditional_style == 
            stu_sus_timss$TOTWGT[stu_sus_timss$traditional_style == 0],
            samedata = F)
 
+# -----------------------------------------------------------------------------------------------------------------#
+### Quantile test 
+# -----------------------------------------------------------------------------------------------------------------#
+
+#install.packages("remotes")
+#remotes::install_github("mkanai/WRShd")
+
+library(WRShd)
+qcomhd(stu_sus_timss$math_scores[stu_sus_timss$traditional_style == 1],
+       stu_sus_timss$math_scores[stu_sus_timss$traditional_style == 0],
+       q = c(0.25, 0.75), cores = 4, plotit = F)
+
+qcomhd(stu_sus_timss$science_scores[stu_sus_timss$traditional_style == 1],
+       stu_sus_timss$science_scores[stu_sus_timss$traditional_style == 0],
+       q = c(0.25, 0.75), cores = 4, plotit = F)
+
+qcomhd(stu_sus_timss$wellness[stu_sus_timss$traditional_style == 1],
+       stu_sus_timss$wellness[stu_sus_timss$traditional_style == 0],
+       q = c(0.25, 0.75), cores = 4, plotit = F)
+
+qcomhd(stu_sus_timss$math_reason_scores[stu_sus_timss$traditional_style == 1],
+       stu_sus_timss$math_reason_scores[stu_sus_timss$traditional_style == 0],
+       q = c(0.25, 0.75), cores = 4, plotit = F)
+
+qcomhd(stu_sus_timss$science_reason_scores[stu_sus_timss$traditional_style == 1],
+       stu_sus_timss$science_reason_scores[stu_sus_timss$traditional_style == 0],
+       q = c(0.25, 0.75), cores = 4, plotit = F)
+
+qcomhd(stu_sus_timss$math_appl_scores[stu_sus_timss$traditional_style == 1],
+       stu_sus_timss$math_appl_scores[stu_sus_timss$traditional_style == 0],
+       q = c(0.25, 0.75), cores = 4, plotit = F)
+
+qcomhd(stu_sus_timss$science_appl_scores[stu_sus_timss$traditional_style == 1],
+       stu_sus_timss$science_appl_scores[stu_sus_timss$traditional_style == 0],
+       q = c(0.25, 0.75), cores = 4, plotit = F)
+
+qcomhd(stu_sus_timss$math_know_scores[stu_sus_timss$traditional_style == 1],
+       stu_sus_timss$math_know_scores[stu_sus_timss$traditional_style == 0],
+       q = c(0.25, 0.75), cores = 4, plotit = F)
+
+qcomhd(stu_sus_timss$science_know_scores[stu_sus_timss$traditional_style == 1],
+       stu_sus_timss$science_know_scores[stu_sus_timss$traditional_style == 0],
+       q = c(0.25, 0.75), cores = 4, plotit = F)
 
 
+# Descriptive Stat
+stu_sus_timss_sub <- stu_sus_timss %>% select(
+                                          # MATH Teacher quality
+                                        BSBM17A,
+                                        BSBM17B,
+                                        BSBM17C,
+                                        BSBM17D,
+                                        BSBM17E,
+                                        BSBM17F,
+                                        BSBM17G,
+                                        
+                                        # Oderliness in math
+                                        BSBM18A,
+                                        BSBM18B,
+                                        BSBM18C,
+                                        BSBM18D,
+                                        BSBM18E,
+                                        BSBM18F,
+                                        
+                                        BSBM16A,
+                                        BSBM16B,
+                                        BSBM16C,
+                                        BSBM16D,
+                                        BSBM16E,
+                                        BSBM16F,
+                                        BSBM16G,
+                                        BSBM16H,
+                                        BSBM16I,
+                                        
+                                        BSBM19A,
+                                        BSBM19B,
+                                        BSBM19C,
+                                        BSBM19D,
+                                        BSBM19E,
+                                        BSBM19F,
+                                        BSBM19G,
+                                        BSBM19H,
+                                        BSBM19I,
+                                        
+                                        BSBM20A,
+                                        BSBM20B,
+                                        BSBM20C,
+                                        BSBM20D,
+                                        BSBM20E,
+                                        BSBM20F,
+                                        BSBM20G,
+                                        BSBM20H,
+                                        BSBM20I,
+                                        
+                                        BSMMAT01, BSMMAT02, BSMMAT03, BSMMAT04, BSMMAT05,
+                                        BSSSCI01, BSSSCI02, BSSSCI03, BSSSCI04, BSSSCI05,
+                                        TOTWGT,
+                                        # Math applying, reasoning
+                                        BSMAPP01,
+                                        BSMAPP02,
+                                        BSMAPP03,
+                                        BSMAPP04,
+                                        BSMAPP05,
+                                        
+                                        BSMREA01,
+                                        BSMREA02,
+                                        BSMREA03,
+                                        BSMREA04,
+                                        BSMREA05,
+                                        
+                                        # Science applying, reasoning
+                                        BSSAPP01,
+                                        BSSAPP02,
+                                        BSSAPP03,
+                                        BSSAPP04,
+                                        BSSAPP05,
+                                        
+                                        BSSREA01,
+                                        BSSREA02,
+                                        BSSREA03,
+                                        BSSREA04,
+                                        BSSREA05,
+                                        
+                                        # Comfort: 
+                                        n11_2, n12_2, n14_2,
+                                        
+                                        n15_0,
+                                        n15_1,
+                                        n15_2,
+                                        
+                                        n16_0,
+                                        n16_1,
+                                        n16_2,
+                                        
+                                        n17_0,
+                                        n17_1,
+                                        n17_2,
+                                        
+                                        # Safety:
+                                        n24_0,
+                                        n24_1,
+                                        n24_2,
+                                        n24_3,
+                                        n24_4,
+                                        
+                                        # Technology:
+                                        n_tech)
+
+descriptive <- data.frame(Mean = unlist(lapply(1:ncol(stu_sus_timss_sub), function(i){(
+  round(weighted.mean(stu_sus_timss_sub[,i], stu_sus_timss_sub[, 'TOTWGT']), 2))
+})),
+SD = unlist(lapply(1:ncol(stu_sus_timss_sub), function(i){(
+  round(sjstats::weighted_sd(stu_sus_timss_sub[,i], stu_sus_timss_sub[, 'TOTWGT']), 2))
+})),
+Min = unlist(lapply(1:ncol(stu_sus_timss_sub), function(i){(
+  round(min(stu_sus_timss_sub[,i]), 2))
+})),
+Max = unlist(lapply(1:ncol(stu_sus_timss_sub), function(i){(
+  round(max(stu_sus_timss_sub[,i]), 2))
+})))
+
+descriptive <- cbind.data.frame(Variable = colnames(stu_sus_timss_sub), descriptive)

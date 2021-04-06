@@ -205,10 +205,120 @@ print(j)
 }
 
 
+plot_multi_all[[1]]
+plot_multi_all[[2]]
+plot_multi_all[[3]]
+plot_multi_all[[4]]
+plot_multi_all[[5]]
 
 
+# Parameter Estimates
 
+est1 <- as.data.frame(parameterEstimates(fit_sem1) %>% 
+                        filter(lhs %in% c('Ind1', 'Ind2', 'Ind3', 'Ind4', 'Ind5')) %>%
+                        select(lhs, est, se, pvalue) %>%
+                        mutate(sig = ifelse(pvalue <= 0.001, '***', 
+                                            ifelse(pvalue > 0.001 & pvalue <= 0.01, '**',
+                                                   ifelse(pvalue > 0.01 & pvalue <= 0.05, '*',
+                                                          ifelse(pvalue > 0.05 & pvalue <= 0.1, '.', '')))))%>%
+                        select(lhs, est, se, sig)) 
+est_multi1 <- as.data.frame(parameterEstimates(fit_sem_multi1) %>% 
+                              filter(lhs %in% c('Ind1_1', 'Ind2_1', 'Ind3_1', 'Ind4_1', 'Ind5_1',
+                                                'Ind1_2', 'Ind2_2', 'Ind3_2', 'Ind4_2', 'Ind5_2')) %>%
+                              mutate(sig = ifelse(pvalue <= 0.001, '***', 
+                                                  ifelse(pvalue > 0.001 & pvalue <= 0.01, '**',
+                                                         ifelse(pvalue > 0.01 & pvalue <= 0.05, '*',
+                                                                ifelse(pvalue > 0.05 & pvalue <= 0.1, '.', ''))))) %>%
+                              select(lhs, est, se, sig)  %>%
+                              mutate(group = substr(lhs, 6, 6)) %>%
+                              mutate(lhs = substr(lhs, 1,4)) %>%
+                              pivot_wider(id_cols = lhs, names_from = group, values_from = c(est, se, sig)) %>%
+                              select(est_1, se_1, sig_1, est_2, se_2, sig_2))
 
+est2 <- as.data.frame(parameterEstimates(fit_sem2) %>% 
+                        filter(lhs %in% c('Ind1', 'Ind2', 'Ind3', 'Ind4', 'Ind5')) %>%
+                        select(lhs, est, se, pvalue) %>%
+                        mutate(sig = ifelse(pvalue <= 0.001, '***', 
+                                            ifelse(pvalue > 0.001 & pvalue <= 0.01, '**',
+                                                   ifelse(pvalue > 0.01 & pvalue <= 0.05, '*',
+                                                          ifelse(pvalue > 0.05 & pvalue <= 0.1, '.', '')))))%>%
+                        select(lhs, est, se, sig))
+est_multi2 <- as.data.frame(parameterEstimates(fit_sem_multi2)  %>% 
+                              filter(lhs %in% c('Ind1_1', 'Ind2_1', 'Ind3_1', 'Ind4_1', 'Ind5_1',
+                                                'Ind1_2', 'Ind2_2', 'Ind3_2', 'Ind4_2', 'Ind5_2')) %>%
+                              mutate(sig = ifelse(pvalue <= 0.001, '***', 
+                                                  ifelse(pvalue > 0.001 & pvalue <= 0.01, '**',
+                                                         ifelse(pvalue > 0.01 & pvalue <= 0.05, '*',
+                                                                ifelse(pvalue > 0.05 & pvalue <= 0.1, '.', '')))))%>%
+                              select(lhs, est, se, sig)  %>%
+                              mutate(group = substr(lhs, 6, 6)) %>%
+                              mutate(lhs = substr(lhs, 1,4)) %>%
+                              pivot_wider(id_cols = lhs, names_from = group, values_from = c(est, se, sig)) %>%
+                              select(est_1, se_1, sig_1, est_2, se_2, sig_2))
 
+est3 <- as.data.frame(parameterEstimates(fit_sem3) %>% 
+                        filter(lhs %in% c('Ind1', 'Ind2', 'Ind3', 'Ind4', 'Ind5')) %>%
+                        select(lhs, est, se, pvalue) %>%
+                        mutate(sig = ifelse(pvalue <= 0.001, '***', 
+                                            ifelse(pvalue > 0.001 & pvalue <= 0.01, '**',
+                                                   ifelse(pvalue > 0.01 & pvalue <= 0.05, '*',
+                                                          ifelse(pvalue > 0.05 & pvalue <= 0.1, '.', '')))))%>%
+                        select(lhs, est, se, sig))
+est_multi3 <- as.data.frame(parameterEstimates(fit_sem_multi3)  %>% 
+                              filter(lhs %in% c('Ind1_1', 'Ind2_1', 'Ind3_1', 'Ind4_1', 'Ind5_1',
+                                                'Ind1_2', 'Ind2_2', 'Ind3_2', 'Ind4_2', 'Ind5_2')) %>%
+                              mutate(sig = ifelse(pvalue <= 0.001, '***', 
+                                                  ifelse(pvalue > 0.001 & pvalue <= 0.01, '**',
+                                                         ifelse(pvalue > 0.01 & pvalue <= 0.05, '*',
+                                                                ifelse(pvalue > 0.05 & pvalue <= 0.1, '.', '')))))%>%
+                              select(lhs, est, se, sig)  %>%
+                              mutate(group = substr(lhs, 6, 6)) %>%
+                              mutate(lhs = substr(lhs, 1,4)) %>%
+                              pivot_wider(id_cols = lhs, names_from = group, values_from = c(est, se, sig)) %>%
+                              select(est_1, se_1, sig_1, est_2, se_2, sig_2))
 
+est4 <- as.data.frame(parameterEstimates(fit_sem4) %>% 
+                        filter(lhs %in% c('Ind1', 'Ind2', 'Ind3', 'Ind4', 'Ind5')) %>%
+                        select(lhs, est, se, pvalue) %>%
+                        mutate(sig = ifelse(pvalue <= 0.001, '***', 
+                                            ifelse(pvalue > 0.001 & pvalue <= 0.01, '**',
+                                                   ifelse(pvalue > 0.01 & pvalue <= 0.05, '*',
+                                                          ifelse(pvalue > 0.05 & pvalue <= 0.1, '.', '')))))%>%
+                        select(lhs, est, se, sig))
+est_multi4 <- as.data.frame(parameterEstimates(fit_sem_multi4)  %>% 
+                              filter(lhs %in% c('Ind1_1', 'Ind2_1', 'Ind3_1', 'Ind4_1', 'Ind5_1',
+                                                'Ind1_2', 'Ind2_2', 'Ind3_2', 'Ind4_2', 'Ind5_2')) %>%
+                              mutate(sig = ifelse(pvalue <= 0.001, '***', 
+                                                  ifelse(pvalue > 0.001 & pvalue <= 0.01, '**',
+                                                         ifelse(pvalue > 0.01 & pvalue <= 0.05, '*',
+                                                                ifelse(pvalue > 0.05 & pvalue <= 0.1, '.', '')))))%>%
+                              select(lhs, est, se, sig)  %>%
+                              mutate(group = substr(lhs, 6, 6)) %>%
+                              mutate(lhs = substr(lhs, 1,4)) %>%
+                              pivot_wider(id_cols = lhs, names_from = group, values_from = c(est, se, sig)) %>%
+                              select(est_1, se_1, sig_1, est_2, se_2, sig_2))
 
+est5 <- as.data.frame(parameterEstimates(fit_sem5) %>% 
+                        filter(lhs %in% c('Ind1', 'Ind2', 'Ind3', 'Ind4', 'Ind5')) %>%
+                        select(lhs, est, se, pvalue) %>%
+                        mutate(sig = ifelse(pvalue <= 0.001, '***', 
+                                            ifelse(pvalue > 0.001 & pvalue <= 0.01, '**',
+                                                   ifelse(pvalue > 0.01 & pvalue <= 0.05, '*',
+                                                          ifelse(pvalue > 0.05 & pvalue <= 0.1, '.', '')))))%>%
+                        select(lhs, est, se, sig))
+est_multi5 <- as.data.frame(parameterEstimates(fit_sem_multi5)  %>% 
+                              filter(lhs %in% c('Ind1_1', 'Ind2_1', 'Ind3_1', 'Ind4_1', 'Ind5_1',
+                                                'Ind1_2', 'Ind2_2', 'Ind3_2', 'Ind4_2', 'Ind5_2')) %>%
+                              mutate(sig = ifelse(pvalue <= 0.001, '***', 
+                                                  ifelse(pvalue > 0.001 & pvalue <= 0.01, '**',
+                                                         ifelse(pvalue > 0.01 & pvalue <= 0.05, '*',
+                                                                ifelse(pvalue > 0.05 & pvalue <= 0.1, '.', '')))))%>%
+                              select(lhs, est, se, sig)  %>%
+                              mutate(group = substr(lhs, 6, 6)) %>%
+                              mutate(lhs = substr(lhs, 1,4)) %>%
+                              pivot_wider(id_cols = lhs, names_from = group, values_from = c(est, se, sig)) %>%
+                              select(est_1, se_1, sig_1, est_2, se_2, sig_2))
+
+est <- rbind.data.frame(est1, est2, est3, est4, est5)
+est_multi <- rbind.data.frame(est_multi1, est_multi2, est_multi3, est_multi4, est_multi5)
+est_all <- cbind.data.frame(est, est_multi)

@@ -169,20 +169,50 @@ formative <- '
 Teacher_Quality =~ 0
 Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Oderliness
 '
-sem <- paste0(cfa_higher, formative,'
-# Regressions:
-
-Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
-SCIENCE ~ Student_Attitudes + BSBGHER 
-')
+sem <- paste0(cfa_higher, formative,
+              '
+              # Regressions:
+              
+              Student_Attitudes ~ a*Teacher_Quality + b*Comfort_furniture + c*Safety + d*Conditions + e*n_tech + BSBGHER
+              SCIENCE ~ f*Student_Attitudes + BSBGHER 
+              
+              # Ind effects
+              Ind1 := a*f
+              Ind2 := b*f
+              Ind3 := c*f
+              Ind4 := d*f
+              Ind5 := e*f
+              ')
 
 # Run Lavaan:
-fit_sem <- sem(sem, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
-summary(fit_sem , fit.measures = T, standardized = T)
+fit_sem2 <- sem(sem, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
+summary(fit_sem2, fit.measures = T, standardized = T)
 
-# For plotting
-fit_sem_multi2 <- sem(sem, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
-                     group = 'traditional_style', meanstructure = TRUE)
+sem_multi <- paste0(cfa_higher, formative,
+                    '
+                    # Regressions:
+                    
+                    Student_Attitudes ~ c(a1, a2)*Teacher_Quality + c(b1, b2)*Comfort_furniture + c(c1, c2)*Safety + c(d1, d2)*Conditions + c(e1, e2)*n_tech + BSBGHER
+                    SCIENCE ~ c(f1, f2)*Student_Attitudes + BSBGHER 
+                    
+                    # Ind effects
+                    Ind1_1 := a1*f1
+                    Ind2_1 := b1*f1
+                    Ind3_1 := c1*f1
+                    Ind4_1 := d1*f1
+                    Ind5_1 := e1*f1
+                    
+                    Ind1_2 := a2*f2
+                    Ind2_2 := b2*f2
+                    Ind3_2 := c2*f2
+                    Ind4_2 := d2*f2
+                    Ind5_2 := e2*f2
+                    ')
+
+# By groups
+fit_sem_multi2 <- sem(sem_multi, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+                      group = 'traditional_style', meanstructure = TRUE)
+summary(fit_sem_multi2 , fit.measures = T, standardized = T)
 
 # -----------------------------------------------------------------------------------------------------------------#
 # Structural Invariance of Mediation Paths
