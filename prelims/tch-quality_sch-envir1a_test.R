@@ -3,6 +3,8 @@
 # Teaching Styles, Teaching Quality, School Environmemt, Students' Beliefs, and Learning Outcomes
 # Data pre-processing 
 
+# TESTING ALTERNATIVE DEFINITION OF A TEACHING STYLE
+
 # Libraries
 library(foreign)
 library(dplyr)
@@ -35,7 +37,8 @@ Sys.setlocale("LC_CTYPE", "russian")
 
 setwd(paste0("C:/Users/", Sys.getenv("USERNAME"), '/YandexDisk/SUS_TIMSS/Data/SUS'))
 tch_sus <- read.csv('export_teachers_flat.csv', sep = '\t') %>% 
-  select(IDSCHOOL, IDTEACH, IDCLASS, StratNameENG, n24_0, n26_0, CourseName, exper = n3_1)
+  select(IDSCHOOL, IDTEACH, IDCLASS, StratNameENG, 'tch_n24_1'= n24_1, 'tch_n24_3'= n24_3,
+         CourseName, exper = n3_1)
 
 # Teaching Styles: 
 # TRADITIONAL (Everyday uses layouts that support explicit instruction/ presentation AND
@@ -43,22 +46,24 @@ tch_sus <- read.csv('export_teachers_flat.csv', sep = '\t') %>%
 # prior to the start of a lesson because a previous user had them in a different position) 
 # vs. MODERN 
 
-tch_sus$traditional_style <- ifelse(tch_sus$n24_0 == 5 & tch_sus$n26_0 == 1, 1, 0)
-table(tch_sus$traditional_style)/length(tch_sus$traditional_style)
+#tch_sus$traditional_style <- ifelse(tch_sus$n24_0 == 5 & tch_sus$n26_0 == 1, 1, 0)
+#table(tch_sus$traditional_style)/length(tch_sus$traditional_style)
+
+
 
 # Defining a subject: Math (1), Science (0)
-tch_sus$subject <- ifelse(tch_sus$CourseName == '1 - "ÐœÐ°Ñ‚ÐµÐ¼Ð°Ñ‚Ð¸ÐºÐ°"', 'math', 'science')
+tch_sus$subject <- ifelse(tch_sus$CourseName == '1 - "Математика"', 'math', 'science')
 table(tch_sus$subject)/length(tch_sus$subject)
 
 # Fixing teaching experience
 tch_sus$exper <- as.character(tch_sus$exper)
-tch_sus$exper <- sub("[Ð°-ÑÐ-Ð¯]+", x = tch_sus$exper, replacement = '')
+tch_sus$exper <- sub("[а-яА-Я]+", x = tch_sus$exper, replacement = '')
 tch_sus$exper <- sub(",", x = tch_sus$exper, replacement = '.')
 tch_sus[tch_sus$IDTEACH == 306302, 'exper'] <- 7 # fixing manually 
 tch_sus$exper <- as.numeric(tch_sus$exper)
 
 # Selecting the variables of focus
-tch_sus <- tch_sus %>% select(IDSCHOOL, IDTEACH, IDCLASS, exper, traditional_style)
+tch_sus <- tch_sus %>% select(IDSCHOOL, IDTEACH, IDCLASS, exper, tch_n24_1, tch_n24_3)
 
 # Wide format for teachers by subject
 #tch_sus$IDTEACH <- NULL
@@ -77,25 +82,7 @@ tch_sus <- stu_sus_id %>%
   left_join(tch_sus, by = c('IDSCHOOL', 'IDCLASS'))
 
 
-# SUS: Averaging by students 
 
-# Function: summarise numeric columns, return first value of non-numeric if we have them in the dataset
-summarise_by_col_class <- function(x){
-  if(is.numeric(x)|is.integer(x)){
-    return(round(median(x, na.rm = T), 0))
-  }
-  else{
-    nth(x, 1)
-  }
-}
-# lapply(1:ncol(tch_sus), function(i){class(tch_sus[,i])}) # checking classes of variables
-
-
-tch_sus %<>% group_by(IDSCHOOL, IDCLASS, IDSTUD)  %>%
-  summarise_all(summarise_by_col_class) %>% ungroup()
-
-# Checking uniqueness of ids
-table(duplicated(tch_sus$IDSTUD))
 
 # 2. Students
 
@@ -154,8 +141,13 @@ stu_sus <- read.csv('export_students_flat.csv', sep = '\t') %>%
          n25_6,
          n25_7,
          n25_8,
-         n25_9
-  )
+         n25_9,
+         
+         # Teaching styles: team teaching and group work
+         n19_1,
+         n19_3
+         
+   )
 
 # Missing values 
 stu_sus[stu_sus == '-'| stu_sus == ''] <- NA
@@ -176,7 +168,7 @@ for (i in 1:nrow(stu_sus)){
   for (j in n24){
     if (stu_sus[i,j] == 5 & is.na(stu_sus[i,j]) == F) {
       stu_sus[i,j] <- round(mean(stu_sus[i, n24[!n24 %in% j]][!(stu_sus[i, n24[!n24 %in% j]] == 5)], na.rm = T), 0)
-      
+
     }
     else if (all(is.na(stu_sus[i, n24]))) {
       stu_sus[i,n24] <- NA
@@ -232,6 +224,46 @@ sus <- stu_sus %>%
 sus <- sus[!is.na(sus$IDTEACH),]
 sus$IDTEACH <- NULL
 
+
+# TEACHING STYLE: ALTERNATIVE
+
+# Modern: students and teachers coincide in their responses about the frequency of using team-teaching and group work
+#sus$traditional_style <- ifelse((sus$tch_n24_1 == 2 & sus$n19_1 == 2) |
+#                                  (sus$tch_n24_1 == 3 & sus$n19_1 == 3)|
+#                                  (sus$tch_n24_1 == 4 & sus$n19_1 == 4)|
+#                                  (sus$tch_n24_1 == 5 & sus$n19_1 == 5)|
+#                                  (sus$tch_n24_3 == 2 & sus$n19_3 == 2)|
+#                                  (sus$tch_n24_3 == 3 & sus$n19_3 == 3)|
+#                                  (sus$tch_n24_3 == 4 & sus$n19_3 == 4)|
+#                                  (sus$tch_n24_3 == 5 & sus$n19_3 == 5), 0, 1)
+
+sus$traditional_style <- ifelse((sus$tch_n24_1 > 1 & sus$n19_1 > 1) |
+                                  (sus$tch_n24_3 > 1 & sus$n19_3 > 1), 0, 1)
+
+# SUS: Averaging by students 
+
+# Function: summarise numeric columns, return first value of non-numeric if we have them in the dataset
+summarise_by_col_class <- function(x){
+  if(is.numeric(x)|is.integer(x)){
+    return(round(median(x, na.rm = T), 0))
+  }
+  else{
+    nth(x, 1)
+  }
+}
+# lapply(1:ncol(tch_sus), function(i){class(tch_sus[,i])}) # checking classes of variables
+
+
+sus %<>% group_by(IDSCHOOL, IDCLASS, IDSTUD)  %>%
+  summarise_all(summarise_by_col_class) %>% ungroup()
+
+# Checking uniqueness of ids
+table(duplicated(sus$IDSTUD))
+
+
+table(sus$traditional_style)/length(sus$traditional_style)
+
+sus[, c('tch_n24_1', 'tch_n24_3', 'n19_1', 'n19_3')] <- NULL
 
 
 # -----------------------------------------------------------------------------------------------------------------#
@@ -385,7 +417,7 @@ bsgrusm7 <- read.spss('bsgrusm7.sav', use.value.labels = F, to.data.frame = T) %
          BSBS25G,
          BSBS25H,
          BSBS25I
-         
+  
   )
 
 # 3. Combine 1. and 2.
@@ -525,7 +557,7 @@ MATH =~ BSMMAT01 + BSMMAT02 + BSMMAT03 + BSMMAT04 + BSMMAT05
 fit_cfa_math_scores  <- cfa(cfa_math_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
 #summary(fit_cfa_math_scores, fit.measures = T, standardized = T)
 stu_sus_timss$math_scores <- as.numeric(lavPredict(fit_cfa_math_scores) * sd(stu_sus_timss$BSMMAT01) + 
-                                          mean(stu_sus_timss$BSMMAT01))
+                                           mean(stu_sus_timss$BSMMAT01))
 ###########
 # Science
 cfa_science_scores <- '
@@ -534,7 +566,7 @@ SCIENCE =~ BSSSCI02 + BSSSCI01 + BSSSCI03 + BSSSCI04 + BSSSCI05
 fit_cfa_science_scores  <- cfa(cfa_science_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
 #summary(fit_cfa_science_scores, fit.measures = T, standardized = T)
 stu_sus_timss$science_scores <- as.numeric(lavPredict(fit_cfa_science_scores) * sd(stu_sus_timss$BSSSCI02) +
-                                             mean(stu_sus_timss$BSSSCI02))
+                                                 mean(stu_sus_timss$BSSSCI02))
 ###########
 # Math Applying
 cfa_math_appl_scores <- '
@@ -543,7 +575,7 @@ APPLYING_MATH =~ BSMAPP01 + BSMAPP02 + BSMAPP03 + BSMAPP04 + BSMAPP05
 fit_cfa_math_appl_scores  <- cfa(cfa_math_appl_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
 #summary(fit_cfa_math_appl_scores, fit.measures = T, standardized = T)
 stu_sus_timss$math_appl_scores <- as.numeric(lavPredict(fit_cfa_math_appl_scores) * sd(stu_sus_timss$BSMAPP01) + 
-                                               mean(stu_sus_timss$BSMAPP01))
+                                          mean(stu_sus_timss$BSMAPP01))
 ###########
 # Science Applying
 cfa_science_appl_scores <- '
@@ -552,7 +584,7 @@ APPLYING_SCIENCE =~ BSSAPP01 + BSSAPP02 + BSSAPP03 + BSSAPP04 + BSSAPP05
 fit_cfa_science_appl_scores  <- cfa(cfa_science_appl_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
 #summary(fit_cfa_science_appl_scores, fit.measures = T, standardized = T)
 stu_sus_timss$science_appl_scores <- as.numeric(lavPredict(fit_cfa_science_appl_scores) * sd(stu_sus_timss$BSSAPP01) + 
-                                                  mean(stu_sus_timss$BSSAPP01))
+                                               mean(stu_sus_timss$BSSAPP01))
 ###########
 # Math Reasoning
 cfa_math_reason_scores <- '
@@ -561,7 +593,7 @@ REASONING_MATH =~ BSMREA01 + BSMREA02 + BSMREA03 + BSMREA04 + BSMREA05
 fit_cfa_math_reason_scores  <- cfa(cfa_math_reason_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
 #summary(fit_cfa_math_reason_scores, fit.measures = T, standardized = T)
 stu_sus_timss$math_reason_scores <- as.numeric(lavPredict(fit_cfa_math_reason_scores) * sd(stu_sus_timss$BSMREA01) + 
-                                                 mean(stu_sus_timss$BSMREA01))
+                                               mean(stu_sus_timss$BSMREA01))
 ###########
 # Science Reasoning
 cfa_science_reason_scores <- '
@@ -570,7 +602,7 @@ REASONING_SCIENCE =~ BSSREA01 + BSSREA02 + BSSREA03 + BSSREA04 + BSSREA05
 fit_cfa_science_reason_scores  <- cfa(cfa_science_reason_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
 #summary(fit_cfa_science_reason_scores, fit.measures = T, standardized = T)
 stu_sus_timss$science_reason_scores <- as.numeric(lavPredict(fit_cfa_science_reason_scores) * sd(stu_sus_timss$BSSREA01) + 
-                                                    mean(stu_sus_timss$BSSREA01))
+                                                  mean(stu_sus_timss$BSSREA01))
 
 ###########
 # Math Knowing
@@ -580,7 +612,7 @@ KNOWING_MATH =~ BSMKNO01 + BSMKNO02 + BSMKNO03 + BSMKNO04 + BSMKNO05
 fit_cfa_math_know_scores  <- cfa(cfa_math_know_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
 #summary(fit_cfa_science_know_scores, fit.measures = T, standardized = T)
 stu_sus_timss$math_know_scores <- as.numeric(lavPredict(fit_cfa_math_know_scores) * sd(stu_sus_timss$BSMKNO01) + 
-                                               mean(stu_sus_timss$BSMKNO01))
+                                                  mean(stu_sus_timss$BSMKNO01))
 
 ###########
 # Science Knowing
@@ -590,7 +622,7 @@ KNOWING_SCIENCE =~ BSSKNO01 + BSSKNO02 + BSSKNO03 + BSSKNO04 + BSSKNO05
 fit_cfa_science_know_scores  <- cfa(cfa_science_know_scores, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
 #summary(fit_cfa_science_know_scores, fit.measures = T, standardized = T)
 stu_sus_timss$science_know_scores <- as.numeric(lavPredict(fit_cfa_science_know_scores) * sd(stu_sus_timss$BSSKNO01) + 
-                                                  mean(stu_sus_timss$BSSKNO01))
+                                                    mean(stu_sus_timss$BSSKNO01))
 
 ###########
 # Wellness
@@ -600,7 +632,7 @@ WELLNESS =~ BSBG13E + BSBG13B + BSBG13C + BSBG13D + BSBG13A
 fit_cfa_wellness  <- cfa(cfa_wellness, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
 #summary(fit_cfa_wellness, fit.measures = T, standardized = T)
 stu_sus_timss$wellness <- as.numeric(lavPredict(fit_cfa_wellness) * sd(stu_sus_timss$BSBG13E) +
-                                       mean(stu_sus_timss$BSBG13E))
+                                             mean(stu_sus_timss$BSBG13E))
 
 
 ########### t.test comparisons in outcomes by teaching styles (modern vs. traditional) ########### 
@@ -716,106 +748,106 @@ qcomhd(stu_sus_timss$science_know_scores[stu_sus_timss$traditional_style == 1],
 
 # Descriptive Stat
 stu_sus_timss_sub <- stu_sus_timss %>% select(
-  # MATH Teacher quality
-  BSBM17A,
-  BSBM17B,
-  BSBM17C,
-  BSBM17D,
-  BSBM17E,
-  BSBM17F,
-  BSBM17G,
-  
-  # Oderliness in math
-  BSBM18A,
-  BSBM18B,
-  BSBM18C,
-  BSBM18D,
-  BSBM18E,
-  BSBM18F,
-  
-  BSBM16A,
-  BSBM16B,
-  BSBM16C,
-  BSBM16D,
-  BSBM16E,
-  BSBM16F,
-  BSBM16G,
-  BSBM16H,
-  BSBM16I,
-  
-  BSBM19A,
-  BSBM19B,
-  BSBM19C,
-  BSBM19D,
-  BSBM19E,
-  BSBM19F,
-  BSBM19G,
-  BSBM19H,
-  BSBM19I,
-  
-  BSBM20A,
-  BSBM20B,
-  BSBM20C,
-  BSBM20D,
-  BSBM20E,
-  BSBM20F,
-  BSBM20G,
-  BSBM20H,
-  BSBM20I,
-  
-  BSMMAT01, BSMMAT02, BSMMAT03, BSMMAT04, BSMMAT05,
-  BSSSCI01, BSSSCI02, BSSSCI03, BSSSCI04, BSSSCI05,
-  TOTWGT,
-  # Math applying, reasoning
-  BSMAPP01,
-  BSMAPP02,
-  BSMAPP03,
-  BSMAPP04,
-  BSMAPP05,
-  
-  BSMREA01,
-  BSMREA02,
-  BSMREA03,
-  BSMREA04,
-  BSMREA05,
-  
-  # Science applying, reasoning
-  BSSAPP01,
-  BSSAPP02,
-  BSSAPP03,
-  BSSAPP04,
-  BSSAPP05,
-  
-  BSSREA01,
-  BSSREA02,
-  BSSREA03,
-  BSSREA04,
-  BSSREA05,
-  
-  # Comfort: 
-  n11_2, n12_2, n14_2,
-  
-  n15_0,
-  n15_1,
-  n15_2,
-  
-  n16_0,
-  n16_1,
-  n16_2,
-  
-  n17_0,
-  n17_1,
-  n17_2,
-  
-  # Safety:
-  n24_0,
-  n24_1,
-  n24_2,
-  n24_3,
-  n24_4,
-  
-  # Technology:
-  n_tech)
+                                          # MATH Teacher quality
+                                        BSBM17A,
+                                        BSBM17B,
+                                        BSBM17C,
+                                        BSBM17D,
+                                        BSBM17E,
+                                        BSBM17F,
+                                        BSBM17G,
+                                        
+                                        # Oderliness in math
+                                        BSBM18A,
+                                        BSBM18B,
+                                        BSBM18C,
+                                        BSBM18D,
+                                        BSBM18E,
+                                        BSBM18F,
+                                        
+                                        BSBM16A,
+                                        BSBM16B,
+                                        BSBM16C,
+                                        BSBM16D,
+                                        BSBM16E,
+                                        BSBM16F,
+                                        BSBM16G,
+                                        BSBM16H,
+                                        BSBM16I,
+                                        
+                                        BSBM19A,
+                                        BSBM19B,
+                                        BSBM19C,
+                                        BSBM19D,
+                                        BSBM19E,
+                                        BSBM19F,
+                                        BSBM19G,
+                                        BSBM19H,
+                                        BSBM19I,
+                                        
+                                        BSBM20A,
+                                        BSBM20B,
+                                        BSBM20C,
+                                        BSBM20D,
+                                        BSBM20E,
+                                        BSBM20F,
+                                        BSBM20G,
+                                        BSBM20H,
+                                        BSBM20I,
+                                        
+                                        BSMMAT01, BSMMAT02, BSMMAT03, BSMMAT04, BSMMAT05,
+                                        BSSSCI01, BSSSCI02, BSSSCI03, BSSSCI04, BSSSCI05,
+                                        TOTWGT,
+                                        # Math applying, reasoning
+                                        BSMAPP01,
+                                        BSMAPP02,
+                                        BSMAPP03,
+                                        BSMAPP04,
+                                        BSMAPP05,
+                                        
+                                        BSMREA01,
+                                        BSMREA02,
+                                        BSMREA03,
+                                        BSMREA04,
+                                        BSMREA05,
+                                        
+                                        # Science applying, reasoning
+                                        BSSAPP01,
+                                        BSSAPP02,
+                                        BSSAPP03,
+                                        BSSAPP04,
+                                        BSSAPP05,
+                                        
+                                        BSSREA01,
+                                        BSSREA02,
+                                        BSSREA03,
+                                        BSSREA04,
+                                        BSSREA05,
+                                        
+                                        # Comfort: 
+                                        n11_2, n12_2, n14_2,
+                                        
+                                        n15_0,
+                                        n15_1,
+                                        n15_2,
+                                        
+                                        n16_0,
+                                        n16_1,
+                                        n16_2,
+                                        
+                                        n17_0,
+                                        n17_1,
+                                        n17_2,
+                                        
+                                        # Safety:
+                                        n24_0,
+                                        n24_1,
+                                        n24_2,
+                                        n24_3,
+                                        n24_4,
+                                        
+                                        # Technology:
+                                        n_tech)
 
 descriptive <- data.frame(Mean = unlist(lapply(1:ncol(stu_sus_timss_sub), function(i){(
   round(weighted.mean(stu_sus_timss_sub[,i], stu_sus_timss_sub[, 'TOTWGT']), 2))

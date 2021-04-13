@@ -5,7 +5,7 @@
 
 library(tidySEM)
 
-fit_names <- paste0('fit_sem_multi', 1:6)
+fit_names <- paste0('fit_sem_multi_plot', 1:6)
 outcomes_old <- c('MATH', 'SCIENCE', 'WELLNESS', 'APPLYING', 'REASONING', 'KNOWING')
 outcomes_new <- c('Math', 'Science', 'Wellness', 'Applying', 'Reasoning', 'Knowing')
 plot_multi_all <- list()

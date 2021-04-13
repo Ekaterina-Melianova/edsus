@@ -215,6 +215,20 @@ fit_sem_multi4 <- sem(sem_multi, data = stu_sus_timss, std.lv = T, sampling.weig
 summary(fit_sem_multi4 , fit.measures = T, standardized = T)
 
 
+# For plotting
+sem_multi_plot <- paste0(cfa_higher, formative,
+                         '
+                    # Regressions:
+                    
+                    Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
+                    MATH ~ Student_Attitudes + BSBGHER 
+                    ')
+
+# By groups
+fit_sem_multi_plot4 <- sem(sem_multi_plot, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+                           group = 'traditional_style', meanstructure = TRUE)
+summary(fit_sem_multi_plot4 , fit.measures = T, standardized = T)
+
 # -----------------------------------------------------------------------------------------------------------------#
 # Structural Invariance of Mediation Paths
 # -----------------------------------------------------------------------------------------------------------------#
