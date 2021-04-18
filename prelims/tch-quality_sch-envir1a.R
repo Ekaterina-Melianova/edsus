@@ -35,7 +35,8 @@ Sys.setlocale("LC_CTYPE", "russian")
 
 setwd(paste0("C:/Users/", Sys.getenv("USERNAME"), '/YandexDisk/SUS_TIMSS/Data/SUS'))
 tch_sus <- read.csv('export_teachers_flat.csv', sep = '\t') %>% 
-  select(IDSCHOOL, IDTEACH, IDCLASS, StratNameENG, n24_0, n26_0, CourseName, exper = n3_1)
+  select(IDSCHOOL, IDTEACH, IDCLASS, StratNameENG, n24_0, n24_3, n24_4, n26_0, CourseName, exper = n3_1) %>%
+  filter(!n24_3 %in% 5)
 
 # Teaching Styles: 
 # TRADITIONAL (Everyday uses layouts that support explicit instruction/ presentation AND
@@ -43,16 +44,18 @@ tch_sus <- read.csv('export_teachers_flat.csv', sep = '\t') %>%
 # prior to the start of a lesson because a previous user had them in a different position) 
 # vs. MODERN 
 
-tch_sus$traditional_style <- ifelse(tch_sus$n24_0 == 5 & tch_sus$n26_0 == 1, 1, 0)
+#tch_sus$traditional_style <- ifelse(tch_sus$n24_0 == 5 & tch_sus$n26_0 == 1, 1, 0)
+tch_sus$traditional_style <- ifelse((tch_sus$n24_0 == 5 | tch_sus$n24_3 == 5) 
+                                    & tch_sus$n26_0 == 1, 1, 0)
 table(tch_sus$traditional_style)/length(tch_sus$traditional_style)
 
 # Defining a subject: Math (1), Science (0)
-tch_sus$subject <- ifelse(tch_sus$CourseName == '1 - "ÐœÐ°Ñ‚ÐµÐ¼Ð°Ñ‚Ð¸ÐºÐ°"', 'math', 'science')
+tch_sus$subject <- ifelse(tch_sus$CourseName == '1 - "Математика"', 'math', 'science')
 table(tch_sus$subject)/length(tch_sus$subject)
 
 # Fixing teaching experience
 tch_sus$exper <- as.character(tch_sus$exper)
-tch_sus$exper <- sub("[Ð°-ÑÐ-Ð¯]+", x = tch_sus$exper, replacement = '')
+tch_sus$exper <- sub("[а-яА-Я]+", x = tch_sus$exper, replacement = '')
 tch_sus$exper <- sub(",", x = tch_sus$exper, replacement = '.')
 tch_sus[tch_sus$IDTEACH == 306302, 'exper'] <- 7 # fixing manually 
 tch_sus$exper <- as.numeric(tch_sus$exper)

@@ -221,7 +221,7 @@ sem_multi_plot <- paste0(cfa_higher, formative,
                     # Regressions:
                     
                     Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
-                    MATH ~ Student_Attitudes + BSBGHER 
+                    APPLYING ~ Student_Attitudes + BSBGHER 
                     ')
 
 # By groups
