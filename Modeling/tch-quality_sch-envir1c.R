@@ -15,7 +15,7 @@ for (j in 1:length(fit_names)){
 
 lat_var_old_ <- c('Math_Teacher_Understandable',
             'Teacher_Quality',			
-            'Math_Teacher_Oderliness',	
+            'Math_Teacher_Orderliness',	
             'Math_Important',
             'Student_Attitudes',			
             'Math_Enjoy',
@@ -33,7 +33,7 @@ lat_var_old <- c(lat_var_old_, outcomes_old[j])
 
 lat_var_new_ <- c('Understandable',
                  'Teacher Quality', 
-                 'Oderliness',
+                 'Orderliness',
                  'Math Important',
                  'Student Attitudes',
                  'Math Enjoy',
@@ -112,7 +112,7 @@ for(i in 1:length(edges$to)){
 
 edges_ <- edges %>% mutate(from = case_when(from == 'Math_Teacher_Understandable' ~ 'Understandable',
                                             from == 'Teacher_Quality' ~ 'Teacher Quality',
-                                            from == 'Math_Teacher_Oderliness' ~ 'Oderliness',
+                                            from == 'Math_Teacher_Orderliness' ~ 'Orderliness',
                                             from == 'MATH' ~ 'Math',
                                             from == 'Math_Important' ~ 'Math Important',
                                             from == 'Student_Attitudes' ~ 'Student Attitudes', 
@@ -128,7 +128,7 @@ edges_ <- edges %>% mutate(from = case_when(from == 'Math_Teacher_Understandable
                                             TRUE ~ from),
                            to = case_when(to == 'Math_Teacher_Understandable' ~ 'Understandable',
                                           to == 'Teacher_Quality' ~ 'Teacher Quality',
-                                          to == 'Math_Teacher_Oderliness' ~ 'Oderliness',
+                                          to == 'Math_Teacher_Orderliness' ~ 'Orderliness',
                                           to == 'MATH' ~ 'Math',
                                           to == 'Math_Important' ~ 'Math Important',
                                           to == 'Student_Attitudes' ~ 'Student Attitudes', 
@@ -171,7 +171,7 @@ plot_multi <- graph_sem(eval(parse(text = fit_names[j])),
           nodes = nodes_,
           layout = get_layout("",	"",	"",	"",	"",	 'Math Important',	"",	 'Math Strong',	"",	"",
                               'Understandable',	"",	"",	 'Teacher Quality',	"",	"",	 'Math Enjoy',	"",	"",	"",
-                              'Oderliness',	"",	"",	"",	"",	"",	"",	"",	"",	"",
+                              'Orderliness',	"",	"",	"",	"",	"",	"",	"",	"",	"",
                               "",	"",	"",	"",	"",	"",	"",	"",	"",	 '',
                               "",	"",	"",	"",	"",	"",	"",	"",	"",	"",
                               "",	"",	"",	"",	"",	"",	"",	"",	"",	"",
@@ -204,7 +204,7 @@ plot_multi_all <- c(plot_multi_all, list(plot_multi))
 print(j)
 }
 
-
+#setwd("C:/Country/Russia/Data/SEASHELL/SEABYTE/edsus/Modeling")
 plot_multi_all[[1]]
 plot_multi_all[[2]]
 plot_multi_all[[3]]

@@ -1,9 +1,9 @@
-# tch-quality_sch-envir1.4b.R
+# tch-quality_sch-envir1.6b.R
 
 # Teaching Styles, Teaching Quality, School Environmemt, Students' Beliefs, and Learning Outcomes
 # Mediation modelling
 
-# APPLYING (MATH)
+# KNOWING (MATH)
 
 # Libraries
 library(foreign)
@@ -39,7 +39,7 @@ cfa <- '
 # Teacher_Quality
 
 Math_Teacher_Understandable =~ BSBM17B + BSBM17C + BSBM17D + BSBM17E + BSBM17G;
-Math_Teacher_Oderliness =~ BSBM18A + BSBM18B + BSBM18C + BSBM18D + BSBM18E + BSBM18F;
+Math_Teacher_Orderliness =~ BSBM18A + BSBM18B + BSBM18C + BSBM18D + BSBM18E + BSBM18F;
 
 # Student_Attitudes
 
@@ -57,7 +57,7 @@ Safety =~ n24_0 + n24_1 + n24_2 + n24_4
 
 # Outcomes
 
-APPLYING =~ BSMAPP01 + BSMAPP02 + BSMAPP03 + BSMAPP04 + BSMAPP05
+KNOWING =~ BSMKNO01 + BSMKNO02 + BSMKNO03 + BSMKNO04 + BSMKNO05
 '
 
 # Run Lavaan:
@@ -122,9 +122,9 @@ fit.stat
 
 # Model
 cfa_higher <- paste0(cfa,'
-Student_Attitudes =~ Math_Important + Math_Enjoy + Math_Strong
-Conditions =~ Audibility + Visibility + Temperature
-')
+                     Student_Attitudes =~ Math_Important + Math_Enjoy + Math_Strong
+                     Conditions =~ Audibility + Visibility + Temperature
+                     ')
 
 #### Configural: the number of items per construct and signs of factor loadings are identical across groups
 fit_cfa_configural_higher <- cfa(cfa_higher, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
@@ -167,14 +167,14 @@ formative <- '
 
 # Formative Factors
 Teacher_Quality =~ 0
-Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Oderliness
+Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Orderliness
 '
 sem <- paste0(cfa_higher, formative,
               '
               # Regressions:
               
               Student_Attitudes ~ a*Teacher_Quality + b*Comfort_furniture + c*Safety + d*Conditions + e*n_tech + BSBGHER
-              APPLYING ~ f*Student_Attitudes + BSBGHER 
+              KNOWING ~ f*Student_Attitudes + BSBGHER 
               
               # Ind effects
               Ind1 := a*f
@@ -185,15 +185,15 @@ sem <- paste0(cfa_higher, formative,
               ')
 
 # Run Lavaan:
-fit_sem4 <- sem(sem, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
-summary(fit_sem4, fit.measures = T, standardized = T)
+fit_sem6 <- sem(sem, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT')
+summary(fit_sem6, fit.measures = T, standardized = T)
 
 sem_multi <- paste0(cfa_higher, formative,
                     '
                     # Regressions:
                     
                     Student_Attitudes ~ c(a1, a2)*Teacher_Quality + c(b1, b2)*Comfort_furniture + c(c1, c2)*Safety + c(d1, d2)*Conditions + c(e1, e2)*n_tech + BSBGHER
-                    APPLYING ~ c(f1, f2)*Student_Attitudes + BSBGHER 
+                    KNOWING ~ c(f1, f2)*Student_Attitudes + BSBGHER 
                     
                     # Ind effects
                     Ind1_1 := a1*f1
@@ -210,99 +210,100 @@ sem_multi <- paste0(cfa_higher, formative,
                     ')
 
 # By groups
-fit_sem_multi4 <- sem(sem_multi, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+fit_sem_multi6 <- sem(sem_multi, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
                       group = 'traditional_style', meanstructure = TRUE)
-summary(fit_sem_multi4 , fit.measures = T, standardized = T)
-
+summary(fit_sem_multi6, fit.measures = T, standardized = T)
 
 # For plotting
 sem_multi_plot <- paste0(cfa_higher, formative,
                          '
-                    # Regressions:
-                    
-                    Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
-                    APPLYING ~ Student_Attitudes + BSBGHER 
-                    ')
+                         # Regressions:
+                         
+                         Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
+                         KNOWING ~ Student_Attitudes + BSBGHER 
+                         ')
 
 # By groups
-fit_sem_multi_plot4 <- sem(sem_multi_plot, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+fit_sem_multi_plot6 <- sem(sem_multi_plot, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
                            group = 'traditional_style', meanstructure = TRUE)
-summary(fit_sem_multi_plot4 , fit.measures = T, standardized = T)
+summary(fit_sem_multi_plot6 , fit.measures = T, standardized = T)
+
 
 # -----------------------------------------------------------------------------------------------------------------#
 # Structural Invariance of Mediation Paths
 # -----------------------------------------------------------------------------------------------------------------#
 
-# Teacher_Quality -> Student_Attitudes -> APPLYING
+# Teacher_Quality -> Student_Attitudes -> KNOWING
 
-sem_1.4 <- paste0(cfa_higher, formative,'
+sem_1.6 <- paste0(cfa_higher, formative,'
                   # Regressions
                   
                   Student_Attitudes ~ c(a, a)*Teacher_Quality + Comfort_furniture + Safety + Conditions + n_tech + BSBGHER
-                  APPLYING ~ c(b, b)*Student_Attitudes + BSBGHER
+                  KNOWING ~ c(b, b)*Student_Attitudes + BSBGHER
                   ')
 
-fit_sem_1.4 <- sem(sem_1.4, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+fit_sem_1.6 <- sem(sem_1.6, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
                    group = 'traditional_style')
-anova_res1.4 <- anova(fit_sem_multi4, fit_sem_1.4)
+anova_res1.6 <- anova(fit_sem_multi6, fit_sem_1.6)
 
 
-# Comfort_furniture -> Student_Attitudes -> APPLYING
-sem_2.4 <- paste0(cfa_higher, formative,'
+# Comfort_furniture -> Student_Attitudes -> KNOWING
+sem_2.6 <- paste0(cfa_higher, formative,'
                   # Regressions
                   
                   Student_Attitudes ~ Teacher_Quality + c(a, a)*Comfort_furniture + Safety + Conditions + n_tech + BSBGHER 
-                  APPLYING ~ c(b, b)*Student_Attitudes + BSBGHER   
+                  KNOWING ~ c(b, b)*Student_Attitudes + BSBGHER   
                   ')
 
-fit_sem_2.4 <- sem(sem_2.4, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+fit_sem_2.6 <- sem(sem_2.6, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
                    group = 'traditional_style')
-anova_res2.4 <- anova(fit_sem_multi4, fit_sem_2.4)
+anova_res2.6 <- anova(fit_sem_multi6, fit_sem_2.6)
 
 
-# Safety -> Student_Attitudes -> APPLYING
-sem_3.4 <- paste0(cfa_higher, formative,'
+# Safety -> Student_Attitudes -> KNOWING
+sem_3.6 <- paste0(cfa_higher, formative,'
                   # Regressions
                   
                   Student_Attitudes ~ Teacher_Quality + Comfort_furniture + c(a, a)*Safety + Conditions + n_tech + BSBGHER 
-                  APPLYING ~ c(b, b)*Student_Attitudes + BSBGHER   
+                  KNOWING ~ c(b, b)*Student_Attitudes + BSBGHER   
                   ')
 
-fit_sem_3.4 <- sem(sem_3.4, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+fit_sem_3.6 <- sem(sem_3.6, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
                    group = 'traditional_style')
-anova_res3.4 <- anova(fit_sem_multi4, fit_sem_3.4)
+anova_res3.6 <- anova(fit_sem_multi6, fit_sem_3.6)
 
 
-# Conditions -> Student_Attitudes -> APPLYING
-sem_4.4 <- paste0(cfa_higher, formative,'
+# Conditions -> Student_Attitudes -> KNOWING
+sem_4.6 <- paste0(cfa_higher, formative,'
                   # Regressions
                   
                   Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + c(a, a)*Conditions + n_tech + BSBGHER 
-                  APPLYING ~ c(b, b)*Student_Attitudes + BSBGHER   
+                  KNOWING ~ c(b, b)*Student_Attitudes + BSBGHER   
                   ')
 
-fit_sem_4.4 <- sem(sem_4.4, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+fit_sem_4.6 <- sem(sem_4.6, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
                    group = 'traditional_style')
-anova_res4.4 <- anova(fit_sem_multi4, fit_sem_4.4)
+anova_res4.6 <- anova(fit_sem_multi6, fit_sem_4.6)
 
 
-# n_tech -> Student_Attitudes -> APPLYING
-sem_5.4 <- paste0(cfa_higher, formative,'
+# n_tech -> Student_Attitudes -> KNOWING
+sem_5.6 <- paste0(cfa_higher, formative,'
                   # Regressions
                   
                   Student_Attitudes ~ Teacher_Quality + Comfort_furniture + Safety + Conditions + c(a, a)*n_tech + BSBGHER 
-                  APPLYING ~ c(b, b)*Student_Attitudes + BSBGHER   
+                  KNOWING ~ c(b, b)*Student_Attitudes + BSBGHER   
                   ')
 
-fit_sem_5.4 <- sem(sem_5.4, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
+fit_sem_5.6 <- sem(sem_5.6, data = stu_sus_timss, std.lv = T, sampling.weights = 'TOTWGT',
                    group = 'traditional_style')
-anova_res5.4 <- anova(fit_sem_multi4, fit_sem_5.4)
+anova_res5.6 <- anova(fit_sem_multi6, fit_sem_5.6)
 
-anova_res1.4
-anova_res2.4
-anova_res3.4
-anova_res4.4
-anova_res5.4
+anova_res1.6
+anova_res2.6
+anova_res3.6
+anova_res4.6
+anova_res5.6
+
 
 
 

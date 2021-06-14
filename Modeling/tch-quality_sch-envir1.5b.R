@@ -39,7 +39,7 @@ cfa <- '
 # Teacher_Quality
 
 Math_Teacher_Understandable =~ BSBM17B + BSBM17C + BSBM17D + BSBM17E + BSBM17G;
-Math_Teacher_Oderliness =~ BSBM18A + BSBM18B + BSBM18C + BSBM18D + BSBM18E + BSBM18F;
+Math_Teacher_Orderliness =~ BSBM18A + BSBM18B + BSBM18C + BSBM18D + BSBM18E + BSBM18F;
 
 # Student_Attitudes
 
@@ -167,7 +167,7 @@ formative <- '
 
 # Formative Factors
 Teacher_Quality =~ 0
-Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Oderliness
+Teacher_Quality ~ 1*Math_Teacher_Understandable + Math_Teacher_Orderliness
 '
 sem <- paste0(cfa_higher, formative,
               '

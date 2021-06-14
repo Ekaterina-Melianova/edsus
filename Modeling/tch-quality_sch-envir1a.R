@@ -818,7 +818,10 @@ stu_sus_timss_sub <- stu_sus_timss %>% select(
   n24_4,
   
   # Technology:
-  n_tech)
+  n_tech,
+  
+  # Styles
+  traditional_style)
 
 descriptive <- data.frame(Mean = unlist(lapply(1:ncol(stu_sus_timss_sub), function(i){(
   round(weighted.mean(stu_sus_timss_sub[,i], stu_sus_timss_sub[, 'TOTWGT']), 2))
